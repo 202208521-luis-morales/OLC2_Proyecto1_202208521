@@ -10,7 +10,11 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Consolas', Helvetica, sans-serif;
+    }
+
+    #archivoInput {
+      display: none;
     }
 
     .tab {
@@ -102,50 +106,51 @@
   <main>
     <h1>OakLand</h1>
     <h2>Proyecto 1</h2>
-    <h3>202208521</h3>
-    
+    <h3 style="margin-top: 0.6rem">202208521</h3>
+
     <div id="tabs" style="margin-bottom: 1.5rem;">
-      <div style="padding: 10px 0">
+      <hr style="margin-top: 0.8rem" />
+      <div style="padding: 15px 0 18px">
         <h2>Archivos</h2>
       </div>
 
       <div style="margin-bottom: 1.5rem;">
-        <button class="btn btn-primary">Abrir Archivo</button>
-        <button class="btn btn-primary">+ Crear archivo</button>
-        <button class="btn btn-danger">x Cerrar pestaña actual</button>
+        <button onclick="saveFile()" class="btn btn-primary">Guardar Archivo</button>
+        <button class="btn btn-primary" id="botonArchivo">Abrir Archivo</button>
+        <input type="file" accept=".oak" id="archivoInput" accept=".txt">
+        <button onclick="createFile()" class="btn btn-primary">+ Crear archivo</button>
+        <button onclick="closeCurrentTab()" class="btn btn-danger">x Cerrar pestaña actual</button>
       </div>
 
-      <div class="tab">
-        <button class="tablinks" onclick="openCity(event, 'London')">Archivo 1</button>
-        <button class="tablinks" onclick="openCity(event, 'Paris')">Archivo 2</button>
-        <button class="tablinks" onclick="openCity(event, 'Tokyo')">Archivo 3</button>
+      <div id="tab" class="tab">
+        <button class="tablinks" id="tab_archivo_1" onclick="openCity(event, 'archivo_1')">archivo_1.oak</button>
+        <button class="tablinks" id="tab_archivo_2" onclick="openCity(event, 'archivo_2')">archivo_2.oak</button>
+        <button class="tablinks" id="tab_archivo_3" onclick="openCity(event, 'archivo_3')">archivo_3.oak</button>
       </div>
 
-      <div id="London" class="tabcontent" style="display: block;">
-        <textarea class="code-area"></textarea>
-      </div>
+      <div id="alltabcontent">
+        <div id="archivo_1" class="tabcontent">
+          <textarea class="code-area"></textarea>
+        </div>
 
-      <div id="Paris" class="tabcontent">
-        <h3>Archivo 2</h3>
-        <p>Paris is the capital of France.</p>
-      </div>
+        <div id="archivo_2" class="tabcontent">
+          <textarea class="code-area"></textarea>
+        </div>
 
-      <div id="Tokyo" class="tabcontent">
-        <h3>Archivo 3</h3>
-        <p>Tokyo is the capital of Japan.</p>
+        <div id="archivo_3" class="tabcontent">
+          <textarea class="code-area"></textarea>
+        </div>
       </div>
-
     </div>
 
     <div style="margin-bottom: 1.5rem;">
-      <button class="btn btn-green">Ejecutar</button>
+      <button onclick="execute()" class="btn btn-green">Ejecutar</button>
     </div>
 
     <div style="margin-bottom: 1.5rem;">
       <div style="border: 1px solid #aaa; padding: 0.7rem 1rem; font-weight: bold;">Consola</div>
-      <div id="output" style="background-color: #141f2a; color: #eee; padding: 1rem">
-        Result: <br />
-        3
+      <div id="output" style="background-color: #141f2a; color: #eee; padding: 1rem;">
+        <p>Bienvenido: Escribe código y luego presiona 'Ejecutar'</p>
       </div>
     </div>
     <div>
@@ -155,6 +160,108 @@
   </main>
 </body>
 <script>
+  var botonArchivo = document.getElementById("botonArchivo");
+  var archivoInput = document.getElementById("archivoInput");
+
+  botonArchivo.addEventListener("click", function () {
+    archivoInput.click();
+  });
+
+  archivoInput.addEventListener("change", function (event) {
+    var archivo = event.target.files[0];
+    if (archivo) {
+      var lector = new FileReader();
+      lector.onload = function (e) {
+        createFile(archivo.name.slice(0, -4), e.target.result);
+      };
+      lector.readAsText(archivo);
+    }
+  });
+
+  function execute() {
+    const output = document.getElementById("output");
+
+    while (output.firstChild) {
+      output.removeChild(output.firstChild);
+    }
+
+    const newP1 = document.createElement("p");
+    newP1.textContent = " ";
+    output.appendChild(newP1);
+
+    for (let i = 0; i < 4; i++) {
+      const newP = document.createElement("p");
+
+      newP.textContent = "> Result " + i;
+      output.appendChild(newP);
+    }
+  }
+
+  function saveFile() {
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].classList.contains(("active"))) {
+        var content = document.getElementById(tablinks[i].textContent.slice(0, -4)).children[0].value;
+
+        var blob = new Blob([content], { type: "text/plain" });
+
+        var link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = tablinks[i].textContent;
+
+        link.click();
+
+        URL.revokeObjectURL(link.href);
+        break;
+      }
+    }
+  }
+
+  function closeCurrentTab() {
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      if (tablinks[i].classList.contains(("active"))) {
+        document.getElementById(tablinks[i].textContent.slice(0, -4)).remove();
+        tablinks[i].remove();
+        break;
+      }
+    }
+  }
+
+  function createFile(text, content) {
+    const textByUser = text ? text : prompt("Ingresa el nombre del nuevo archivo").trim();
+
+    tabcontent = document.getElementsByClassName("tabcontent");
+
+    if (Array.from(tabcontent).some(elem => elem.id === textByUser)) {
+      alert("ERROR: El archivo con ese nombre ya existe");
+    } else {
+      const newTab = document.createElement("button");
+      newTab.classList.add("tablinks");
+      newTab.textContent = textByUser + ".oak";
+      newTab.onclick = (event) => openCity(event, textByUser);
+      newTab.id = "tab_" + textByUser;
+
+      document.getElementById("tab").appendChild(newTab);
+
+      const newTabContent = document.createElement("div");
+      const newTextArea = document.createElement("textarea");
+
+      newTextArea.classList.add("code-area");
+      if (content) {
+        newTextArea.textContent = content;
+      }
+
+      newTabContent.id = textByUser;
+      newTabContent.classList.add("tabcontent");
+      newTabContent.appendChild(newTextArea);
+
+      document.getElementById("alltabcontent").appendChild(newTabContent);
+
+      newTab.click();
+    }
+  }
+
   function openCity(evt, cityName) {
     var i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
