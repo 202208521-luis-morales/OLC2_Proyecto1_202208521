@@ -123,9 +123,7 @@
       </div>
 
       <div id="tab" class="tab">
-        <button class="tablinks" id="tab_archivo_1" onclick="openCity(event, 'archivo_1')">archivo_1.oak</button>
-        <button class="tablinks" id="tab_archivo_2" onclick="openCity(event, 'archivo_2')">archivo_2.oak</button>
-        <button class="tablinks" id="tab_archivo_3" onclick="openCity(event, 'archivo_3')">archivo_3.oak</button>
+        <button class="tablinks" id="tab_archivo_1" onclick="openCity(event, 'archivo_1')">prueba.oak</button>
       </div>
 
       <div id="alltabcontent">
@@ -144,7 +142,7 @@
     </div>
 
     <div style="margin-bottom: 1.5rem;">
-      <button onclick="execute()" class="btn btn-green">Ejecutar</button>
+      <button id="btn-execute" class="btn btn-green">Ejecutar</button>
     </div>
 
     <div style="margin-bottom: 1.5rem;">
@@ -167,6 +165,8 @@
     archivoInput.click();
   });
 
+  document.getElementById("tab_archivo_1").click();
+
   archivoInput.addEventListener("change", function (event) {
     var archivo = event.target.files[0];
     if (archivo) {
@@ -178,29 +178,10 @@
     }
   });
 
-  function execute() {
-    const output = document.getElementById("output");
-
-    while (output.firstChild) {
-      output.removeChild(output.firstChild);
-    }
-
-    const newP1 = document.createElement("p");
-    newP1.textContent = " ";
-    output.appendChild(newP1);
-
-    for (let i = 0; i < 4; i++) {
-      const newP = document.createElement("p");
-
-      newP.textContent = "> Result " + i;
-      output.appendChild(newP);
-    }
-  }
-
   function saveFile() {
-    tablinks = document.getElementsByClassName("tablinks");
+    const tablinks = document.getElementsByClassName("tablinks");
     for (i = 0; i < tablinks.length; i++) {
-      if (tablinks[i].classList.contains(("active"))) {
+      if (tablinks[i].classList.contains("active")) {
         var content = document.getElementById(tablinks[i].textContent.slice(0, -4)).children[0].value;
 
         var blob = new Blob([content], { type: "text/plain" });
@@ -276,5 +257,7 @@
     evt.currentTarget.className += " active";
   }
 </script>
+
+<script src="my-index.js" type="module"></script>
 
 </html>
