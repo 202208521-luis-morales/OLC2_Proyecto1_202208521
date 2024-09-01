@@ -1,5 +1,4 @@
 import { InterpreterVisitor } from "./interprete.js";
-import { Entorno } from './entorno.js'
 
 export class Invocable {
 

@@ -54,6 +54,21 @@
 
  * @typedef {import('./nodos').Llamada} Llamada
 
+
+ * @typedef {import('./nodos').FuncDcl} FuncDcl
+
+
+ * @typedef {import('./nodos').ClassDcl} ClassDcl
+
+
+ * @typedef {import('./nodos').Instancia} Instancia
+
+
+ * @typedef {import('./nodos').Get} Get
+
+
+ * @typedef {import('./nodos').Set} Set
+
  */
 
 
@@ -223,6 +238,51 @@ export class BaseVisitor {
      */
     visitLlamada(node) {
         throw new Error('Metodo visitLlamada no implementado');
+    }
+    
+
+    /**
+     * @param {FuncDcl} node
+     * @returns {any}
+     */
+    visitFuncDcl(node) {
+        throw new Error('Metodo visitFuncDcl no implementado');
+    }
+    
+
+    /**
+     * @param {ClassDcl} node
+     * @returns {any}
+     */
+    visitClassDcl(node) {
+        throw new Error('Metodo visitClassDcl no implementado');
+    }
+    
+
+    /**
+     * @param {Instancia} node
+     * @returns {any}
+     */
+    visitInstancia(node) {
+        throw new Error('Metodo visitInstancia no implementado');
+    }
+    
+
+    /**
+     * @param {Get} node
+     * @returns {any}
+     */
+    visitGet(node) {
+        throw new Error('Metodo visitGet no implementado');
+    }
+    
+
+    /**
+     * @param {Set} node
+     * @returns {any}
+     */
+    visitSet(node) {
+        throw new Error('Metodo visitSet no implementado');
     }
     
 }

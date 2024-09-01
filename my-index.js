@@ -16,7 +16,7 @@ document.getElementById("btn-execute").addEventListener("click", () => {
   }
 
   sentencias.forEach(sentencia => sentencia.accept(interprete))
-  //interprete.salida.split("\n")
+  console.log({sentencias})
 
   while (output.firstChild) {
     output.removeChild(output.firstChild);

@@ -294,6 +294,101 @@ const configuracionNodos = [
                 description: 'Argumentos de la llamada'
             }
         ]
+    },
+    // FuncDcl = "function" _ id:Identificador _ "(" _ params:Parametros? _ ")" _ Bloque { return crearNodo('dclFunc', { id, params, Bloque }) }
+    {
+        name: 'FuncDcl',
+        extends: 'Expresion',
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Identificador de la funcion'
+            },
+            {
+                name: 'params',
+                type: 'string[]',
+                description: 'Parametros de la funcion'
+            },
+            {
+                name: 'bloque',
+                type: 'Bloque',
+                description: 'Cuerpo de la funcion'
+            }
+        ]
+    },
+    // ClassDcl
+    // rearNodo('dclClase', { id, dcls }) }
+    {
+        name: 'ClassDcl',
+        extends: 'Expresion',
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Identificador de la clase'
+            },
+            {
+                name: 'dcls',
+                type: 'Expresion[]',
+                description: 'Declaraciones de la clase'
+            }
+        ]
+    },
+    //   / "new" _ id:Identificador _ "(" _ Argumentos? _ ")" { return crearNodo('instancia', { id, args: args || [] }) }
+    {
+        name: 'Instancia',
+        extends: 'Expresion',
+        props: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'Identificador de la clase'
+            },
+            {
+                name: 'args',
+                type: 'Expresion[]',
+                description: 'Argumentos de la instancia'
+            }
+        ]
+    },
+    // return crearNodo('get', { objetivo, propiedad: id })
+    {
+        name: 'Get',
+        extends: 'Expresion',
+        props: [
+            {
+                name: 'objetivo',
+                type: 'Expresion',
+                description: 'Objeto de la propiedad'
+            },
+            {
+                name: 'propiedad',
+                type: 'string',
+                description: 'Identificador de la propiedad'
+            }
+        ]
+    },
+    {
+        name: 'Set',
+        extends: 'Expresion',
+        props: [
+            {
+                name: 'objetivo',
+                type: 'Expresion',
+                description: 'Objeto de la propiedad'
+            },
+            {
+                name: 'propiedad',
+                type: 'string',
+                description: 'Identificador de la propiedad'
+            },
+            {
+                name: 'valor',
+                type: 'Expresion',
+                description: 'Valor de la propiedad'
+            }
+        ]
     }
 
 ]

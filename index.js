@@ -15,8 +15,15 @@ const editor = monaco.editor.create(
     value: '',
     language: 'java',
     theme: 'vs-dark'
-},
-);
+});
+
+const content = localStorage.getItem('content')
+editor.setValue(content || "")
+
+// save content in local storage
+editor.onDidChangeModelContent(() => {
+    localStorage.setItem('content', editor.getValue())
+})
 
 btn.addEventListener('click', () => {
     const codigoFuente = editor.getValue()
