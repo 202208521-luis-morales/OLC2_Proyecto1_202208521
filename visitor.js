@@ -15,8 +15,17 @@
 
  * @typedef {import('./nodos').Numero} Numero
 
+ * @typedef {import('./nodos').NString} NString
+
+ * @typedef {import('./nodos').NBoolean} NBoolean
+
+ * @typedef {import('./nodos').NNull} NNull
+
+ * @typedef {import('./nodos').NChar} NChar
 
  * @typedef {import('./nodos').DeclaracionVariable} DeclaracionVariable
+
+ * @typedef {import('./nodos').DeclaracionVariable1} DeclaracionVariable1
 
 
  * @typedef {import('./nodos').ReferenciaVariable} ReferenciaVariable
@@ -122,7 +131,38 @@ export class BaseVisitor {
     visitNumero(node) {
         throw new Error('Metodo visitNumero no implementado');
     }
+
+    /**
+     * @param {NString} node
+     * @returns {any}
+     */
+    visitNString(node) {
+        throw new Error('Metodo visitNString no implementado');
+    }
     
+    /**
+     * @param {NBoolean} node
+     * @returns {any}
+     */
+    visitNBoolean(node) {
+        throw new Error('Metodo visitNBoolean no implementado');
+    }
+
+    /**
+     * @param {NNull} node
+     * @returns {any}
+     */
+    visitNNull(node) {
+        throw new Error('Metodo visitNNull no implementado');
+    }
+
+    /**
+     * @param {NChar} node
+     * @returns {any}
+     */
+    visitNChar(node) {
+        throw new Error('Metodo visitNChar no implementado');
+    }
 
     /**
      * @param {DeclaracionVariable} node
@@ -130,6 +170,14 @@ export class BaseVisitor {
      */
     visitDeclaracionVariable(node) {
         throw new Error('Metodo visitDeclaracionVariable no implementado');
+    }
+
+    /**
+     * @param {DeclaracionVariable1} node
+     * @returns {any}
+     */
+     visitDeclaracionVariable1(node) {
+        throw new Error('Metodo visitDeclaracionVariable1 no implementado');
     }
     
 

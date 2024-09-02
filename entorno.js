@@ -12,11 +12,12 @@ export class Entorno {
 
     /**
      * @param {string} nombre
+     * @param {any} tipo
      * @param {any} valor
      */
-    set(nombre, valor) {
+    set(nombre, tipo, valor) {
         // TODO: si algo ya está definido, lanzar error
-        this.valores[nombre] = valor;
+        this.valores[nombre] = {tipo, valor};
     }
 
     /**

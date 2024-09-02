@@ -86,6 +86,33 @@ export class InterpreterVisitor extends BaseVisitor {
         return node.valor;
     }
 
+    /**
+      * @type {BaseVisitor['visitNString']}
+      */
+    visitNString(node) {
+        return node.valor;
+    }
+
+    /**
+      * @type {BaseVisitor['visitNBoolean']}
+      */
+    visitNBoolean(node) {
+        return node.valor;
+    }
+
+    /**
+      * @type {BaseVisitor['visitNNull']}
+      */
+    visitNNull(node) {
+        return node.valor;
+    }
+
+    /**
+      * @type {BaseVisitor['visitNChar']}
+      */
+    visitNChar(node) {
+        return node.valor;
+    }
 
     /**
      * @type {BaseVisitor['visitDeclaracionVariable']}
@@ -93,8 +120,64 @@ export class InterpreterVisitor extends BaseVisitor {
     visitDeclaracionVariable(node) {
         const nombreVariable = node.id;
         const valorVariable = node.exp.accept(this);
+        let tipoVariable;
 
-        this.entornoActual.set(nombreVariable, valorVariable);
+        switch (node.exp.constructor.name) {
+            case "Numero":
+                tipoVariable = "number";
+                break;
+            case "NString":
+                tipoVariable = "string";
+                break;
+            case "NBoolean":
+                tipoVariable = "boolean";
+                break;
+            case "NNull":
+                tipoVariable = "null";
+                break;
+            case "NChar":
+                tipoVariable = "char";
+                break;
+        }
+
+    
+        this.entornoActual.set(nombreVariable, tipoVariable, valorVariable);
+    }
+
+    /**
+     * @type {BaseVisitor['visitDeclaracionVariable1']}
+     */
+    visitDeclaracionVariable1(node) {
+        const nombreVariable = node.id;
+        const valorVariable = node.exp.accept(this);
+        const tipoVariable = node.type;
+
+        let tipoValor;
+
+        switch (node.exp.constructor.name) {
+            case "Numero":
+                tipoValor = "number";
+                break;
+            case "NString":
+                tipoValor = "string";
+                break;
+            case "NBoolean":
+                tipoValor = "boolean";
+                break;
+            case "NNull":
+                tipoValor = "null";
+                break;
+            case "NChar":
+                tipoValor = "char";
+                break;
+        }
+
+        if (tipoValor === tipoVariable) {
+            this.entornoActual.set(nombreVariable, tipoVariable, valorVariable);
+            console.log("Se guardó")
+        } else {
+            throw new Error();
+        }
     }
 
 
@@ -103,7 +186,7 @@ export class InterpreterVisitor extends BaseVisitor {
       */
     visitReferenciaVariable(node) {
         const nombreVariable = node.id;
-        return this.entornoActual.get(nombreVariable);
+        return this.entornoActual.get(nombreVariable).valor;
     }
 
 

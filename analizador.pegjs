@@ -7,6 +7,7 @@
       'binaria': nodos.OperacionBinaria,
       'unaria': nodos.OperacionUnaria,
       'declaracionVariable': nodos.DeclaracionVariable,
+      'declaracionVariable1': nodos.DeclaracionVariable1,
       'referenciaVariable': nodos.ReferenciaVariable,
       'print': nodos.Print,
       'expresionStmt': nodos.ExpresionStmt,
@@ -23,7 +24,11 @@
       'dclClase': nodos.ClassDcl,
       'instancia': nodos.Instancia,
       'get': nodos.Get,
-      'set': nodos.Set
+      'set': nodos.Set,
+      'string': nodos.NString,
+      'boolean': nodos.NBoolean,
+      'null': nodos.NNull,
+      'char': nodos.NChar
     }
 
     const nodo = new tipos[tipoNodo](props)
@@ -36,9 +41,12 @@ programa = _ dcl:Declaracion* _ { return dcl }
 
 Declaracion = 
             dcl:ClassDcl _ { return dcl }
+            / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
             / dcl:FuncDcl _ { return dcl }
             / stmt:Stmt _ { return stmt }
+
+VarDcl1 = typ:("string"/"boolean"/"char") _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, exp }) }
 
 VarDcl = "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
 
@@ -145,7 +153,7 @@ Unaria = "-" _ num:Unaria { return crearNodo('unaria', { op: '-', exp: num }) }
 
 // "a"()()
 // a.b().c().d.c.e
-Llamada = objetivoInicial:Numero operaciones:(
+Llamada = objetivoInicial:Dato operaciones:(
     ("(" _ args:Argumentos? _ ")" { return {args, tipo: 'funcCall' } })
     / ("." _ id:Identificador _ { return { id, tipo: 'get' } })
   )* 
@@ -177,14 +185,39 @@ Argumentos = arg:Expresion _ args:("," _ exp:Expresion { return exp })* { return
 
 
 // { return{ tipo: "numero", valor: parseFloat(text(), 10) } }
-Numero = [0-9]+( "." [0-9]+ )? {return crearNodo('numero', { valor: parseFloat(text(), 10) })}
+Dato = [0-9]+( "." [0-9]+ )? {return crearNodo('numero', { valor: parseFloat(text(), 10) })}
   / "(" _ exp:Expresion _ ")" { return crearNodo('agrupacion', { exp }) }
   / "new" _ id:Identificador _ "(" _ args:Argumentos? _ ")" { return crearNodo('instancia', { id, args: args || [] }) }
+  / text:string { return crearNodo('string', { valor: text })}
+  / text:null { return crearNodo('null', { valor: text })}
+  / text:boolean { return crearNodo('boolean', { valor: text })}
+  / text:char { return crearNodo('char', { valor: text })}
   / id:Identificador { return crearNodo('referenciaVariable', { id }) }
+  
+string
+  = '"' chars:doubleQuotedChars* '"' {
+      return chars.join(''); // Combina los caracteres en un string
+  }
 
+boolean
+  = "true" { return true; }
+  / "false" { return false; }
 
-_ = ([ \t\n\r] / Comentarios)* 
+null
+  = "null" { return null; }
 
+doubleQuotedChars
+  = char:[^"\\] / "\\" . { return text(); } // Acepta cualquier cosa excepto " o \, y maneja los caracteres escapados
+
+_ = ([ \t\n\r] / Comentarios)*
+
+char
+  = "'" c:simpleChar "'" {
+      return c;
+  }
+
+simpleChar
+  = [^'\\] / "\\" . { return text(); }
 
 Comentarios = "//" (![\n] .)*
             / "/*" (!("*/") .)* "*/"

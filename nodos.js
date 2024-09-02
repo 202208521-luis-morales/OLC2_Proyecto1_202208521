@@ -139,6 +139,102 @@ export class Agrupacion extends Expresion {
         return visitor.visitAgrupacion(this);
     }
 }
+
+export class NString extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.valor Valor del numero
+    */
+    constructor({ valor }) {
+        super();
+        
+        /**
+         * @type {string}
+        */
+        this.valor = valor;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNumero(this);
+    }
+}
+
+export class NBoolean extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {boolean} options.valor
+    */
+    constructor({ valor }) {
+        super();
+        
+        /**
+         * @type {boolean}
+        */
+        this.valor = valor;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNBoolean(this);
+    }
+}
+
+export class NNull extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {any} options.valor
+    */
+    constructor({ valor }) {
+        super();
+        
+        /**
+         * @type {any}
+        */
+        this.valor = valor;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNNull(this);
+    }
+}
+
+export class NChar extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.valor
+    */
+    constructor({ valor }) {
+        super();
+        
+        /**
+         * @type {string}
+        */
+        this.valor = valor;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNChar(this);
+    }
+}
     
 export class Numero extends Expresion {
 
@@ -164,7 +260,46 @@ export class Numero extends Expresion {
         return visitor.visitNumero(this);
     }
 }
-    
+
+export class DeclaracionVariable1 extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id Identificador de la variable
+ * @param {Expresion} options.exp Expresion de la variable
+    */
+    constructor({ type, id, exp }) {
+        super();
+        
+        /**
+         * Identificador de la variable
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * Expresion de la variable
+         * @type {Expresion}
+        */
+        this.exp = exp;
+
+        /**
+         * Tipo de la variable
+         * @type {string}
+         */
+        this.type = type;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitDeclaracionVariable1(this);
+    }
+}
+
 export class DeclaracionVariable extends Expresion {
 
     /**
@@ -731,4 +866,4 @@ export class Set extends Expresion {
     }
 }
     
-export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, Expresion, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, Numero, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
