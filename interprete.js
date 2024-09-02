@@ -80,13 +80,6 @@ export class InterpreterVisitor extends BaseVisitor {
     }
 
     /**
-      * @type {BaseVisitor['visitNumero']}
-      */
-    visitNumero(node) {
-        return node.valor;
-    }
-
-    /**
       * @type {BaseVisitor['visitNString']}
       */
     visitNString(node) {
@@ -115,6 +108,20 @@ export class InterpreterVisitor extends BaseVisitor {
     }
 
     /**
+      * @type {BaseVisitor['visitNInt']}
+      */
+    visitNInt(node) {
+        return node.valor;
+    }
+
+    /**
+      * @type {BaseVisitor['visitNFloat']}
+      */
+    visitNFloat(node) {
+        return node.valor;
+    }
+
+    /**
      * @type {BaseVisitor['visitDeclaracionVariable']}
      */
     visitDeclaracionVariable(node) {
@@ -123,8 +130,11 @@ export class InterpreterVisitor extends BaseVisitor {
         let tipoVariable;
 
         switch (node.exp.constructor.name) {
-            case "Numero":
-                tipoVariable = "number";
+            case "NInt":
+                tipoVariable = "int";
+                break;
+            case "NFloat":
+                tipoVariable = "float";
                 break;
             case "NString":
                 tipoVariable = "string";
@@ -155,11 +165,11 @@ export class InterpreterVisitor extends BaseVisitor {
         let tipoValor;
 
         switch (node.exp.constructor.name) {
-            case "Numero":
-                tipoValor = "number";
+            case "NInt":
+                tipoValor = "int";
                 break;
-            case "NString":
-                tipoValor = "string";
+            case "NFloat":
+                tipoValor = "float";
                 break;
             case "NBoolean":
                 tipoValor = "boolean";
@@ -170,11 +180,13 @@ export class InterpreterVisitor extends BaseVisitor {
             case "NChar":
                 tipoValor = "char";
                 break;
+            case "NString":
+                tipoValor = "string";
+                break;
         }
 
         if (tipoValor === tipoVariable) {
             this.entornoActual.set(nombreVariable, tipoVariable, valorVariable);
-            console.log("Se guardó")
         } else {
             throw new Error();
         }

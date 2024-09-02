@@ -235,18 +235,17 @@ export class NChar extends Expresion {
         return visitor.visitNChar(this);
     }
 }
-    
-export class Numero extends Expresion {
+
+export class NInt extends Expresion {
 
     /**
     * @param {Object} options
-    * @param {number} options.valor Valor del numero
+    * @param {number} options.valor
     */
     constructor({ valor }) {
         super();
         
         /**
-         * Valor del numero
          * @type {number}
         */
         this.valor = valor;
@@ -257,9 +256,34 @@ export class Numero extends Expresion {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitNumero(this);
+        return visitor.visitNInt(this);
     }
 }
+
+export class NFloat extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {number} options.valor
+    */
+    constructor({ valor }) {
+        super();
+        
+        /**
+         * @type {number}
+        */
+        this.valor = valor;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNFloat(this);
+    }
+}
+    
 
 export class DeclaracionVariable1 extends Expresion {
 
@@ -347,7 +371,6 @@ export class ReferenciaVariable extends Expresion {
          * @type {string}
         */
         this.id = id;
-
     }
 
     /**
@@ -866,4 +889,4 @@ export class Set extends Expresion {
     }
 }
     
-export default { NChar, Expresion, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, Numero, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, NInt, NFloat, Expresion, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }

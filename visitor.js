@@ -13,8 +13,6 @@
  * @typedef {import('./nodos').Agrupacion} Agrupacion
 
 
- * @typedef {import('./nodos').Numero} Numero
-
  * @typedef {import('./nodos').NString} NString
 
  * @typedef {import('./nodos').NBoolean} NBoolean
@@ -22,6 +20,10 @@
  * @typedef {import('./nodos').NNull} NNull
 
  * @typedef {import('./nodos').NChar} NChar
+
+ * @typedef {import('./nodos').NInt} NItn
+
+ * @typedef {import('./nodos').NFloat} NFloat
 
  * @typedef {import('./nodos').DeclaracionVariable} DeclaracionVariable
 
@@ -123,15 +125,6 @@ export class BaseVisitor {
         throw new Error('Metodo visitAgrupacion no implementado');
     }
     
-
-    /**
-     * @param {Numero} node
-     * @returns {any}
-     */
-    visitNumero(node) {
-        throw new Error('Metodo visitNumero no implementado');
-    }
-
     /**
      * @param {NString} node
      * @returns {any}
@@ -162,6 +155,22 @@ export class BaseVisitor {
      */
     visitNChar(node) {
         throw new Error('Metodo visitNChar no implementado');
+    }
+
+    /**
+     * @param {NChar} node
+     * @returns {any}
+     */
+    visitNInt(node) {
+        throw new Error('Metodo visitNInt no implementado');
+    }
+
+    /**
+     * @param {NChar} node
+     * @returns {any}
+     */
+    visitNFloat(node) {
+        throw new Error('Metodo visitNFloat no implementado');
     }
 
     /**
