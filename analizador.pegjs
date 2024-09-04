@@ -41,14 +41,15 @@
 programa = _ dcl:Declaracion* _ { return dcl }
 
 Declaracion = 
-            dcl:ClassDcl _ { return dcl }
+            stmt:Stmt _ { return stmt }
+            / dcl:ClassDcl _ { return dcl }
             / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
             / dcl:FuncDcl _ { return dcl }
             / dcl:Asignacion _ {return dcl}
-            / stmt:Stmt _ { return stmt }
+            
 
-VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float") _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, exp }) }
+VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float") _ id:Identificador _ optValue:("=" _ exp:Expresion)? _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, exp: optValue ? optValue[2] : null }) }
 
 VarDcl = "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
 
@@ -65,7 +66,7 @@ ClassBody = dcl:VarDcl _ { return dcl }
 // return ['param1', ...['param2', 'param3']]
 Parametros = id:Identificador _ params:("," _ ids:Identificador { return ids })* { return [id, ...params] }
 
-Stmt = "print(" _ exp:Expresion _ ")" _ ";" { return crearNodo('print', { exp }) }
+Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('print', { exp }) }
     / Bloque:Bloque { return Bloque }
     / "if" _ "(" _ cond:Expresion _ ")" _ stmtTrue:Stmt 
       stmtFalse:(
@@ -92,6 +93,13 @@ Expresion = Comparacion
 
 // a.b.c.d = 2
 // a.b() = 2
+
+Asignacion
+  = name:Identificador _ "=" _ value:Expresion _ ";" {
+      return crearNodo('asignacion', { id: name, asgn: value })
+  }
+
+/*
 Asignacion = asignado:Expresion _ "=" _ asgn:Asignacion 
   { 
 
@@ -109,6 +117,7 @@ Asignacion = asignado:Expresion _ "=" _ asgn:Asignacion
 
 
   }
+*/
 
 
 Comparacion = izq:Suma expansion:(

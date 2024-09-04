@@ -150,7 +150,7 @@ export class InterpreterVisitor extends BaseVisitor {
                 break;
         }
 
-    
+
         this.entornoActual.set(nombreVariable, tipoVariable, valorVariable);
     }
 
@@ -159,36 +159,40 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitDeclaracionVariable1(node) {
         const nombreVariable = node.id;
-        const valorVariable = node.exp.accept(this);
         const tipoVariable = node.type;
 
-        let tipoValor;
+        if (node.exp !== null) {
+            let tipoValor;
+            const valorVariable = node.exp.accept(this);
 
-        switch (node.exp.constructor.name) {
-            case "NInt":
-                tipoValor = "int";
-                break;
-            case "NFloat":
-                tipoValor = "float";
-                break;
-            case "NBoolean":
-                tipoValor = "boolean";
-                break;
-            case "NNull":
-                tipoValor = "null";
-                break;
-            case "NChar":
-                tipoValor = "char";
-                break;
-            case "NString":
-                tipoValor = "string";
-                break;
-        }
+            switch (node.exp.constructor.name) {
+                case "NInt":
+                    tipoValor = "int";
+                    break;
+                case "NFloat":
+                    tipoValor = "float";
+                    break;
+                case "NBoolean":
+                    tipoValor = "boolean";
+                    break;
+                case "NNull":
+                    tipoValor = "null";
+                    break;
+                case "NChar":
+                    tipoValor = "char";
+                    break;
+                case "NString":
+                    tipoValor = "string";
+                    break;
+            }
 
-        if (tipoValor === tipoVariable) {
-            this.entornoActual.set(nombreVariable, tipoVariable, valorVariable);
+            if (tipoValor === tipoVariable) {
+                this.entornoActual.set(nombreVariable, tipoVariable, valorVariable);
+            } else {
+                throw new Error();
+            }
         } else {
-            throw new Error();
+            this.entornoActual.set(nombreVariable, tipoVariable, null);
         }
     }
 
@@ -224,7 +228,34 @@ export class InterpreterVisitor extends BaseVisitor {
     visitAsignacion(node) {
         // const valor = this.interpretar(node.asgn);
         const valor = node.asgn.accept(this);
-        this.entornoActual.assign(node.id, valor);
+
+        let tipoValor;
+
+        switch (node.asgn.constructor.name) {
+            case "NInt":
+                tipoValor = "int";
+                break;
+            case "NFloat":
+                tipoValor = "float";
+                break;
+            case "NBoolean":
+                tipoValor = "boolean";
+                break;
+            case "NNull":
+                tipoValor = "null";
+                break;
+            case "NChar":
+                tipoValor = "char";
+                break;
+            case "NString":
+                tipoValor = "string";
+                break;
+        }
+
+        this.entornoActual.assign(node.id, {
+            tipo: tipoValor,
+            valor
+        });
 
         return valor;
     }

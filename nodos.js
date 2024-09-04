@@ -160,7 +160,7 @@ export class NString extends Expresion {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitNumero(this);
+        return visitor.visitNString(this);
     }
 }
 
