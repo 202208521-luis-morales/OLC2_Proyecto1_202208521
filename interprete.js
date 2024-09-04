@@ -94,6 +94,8 @@ export class InterpreterVisitor extends BaseVisitor {
                 }
             case '!':
                 if(expType === "boolean") {
+                    return !exp;
+                } else {
                     throw new Error("Tipo no soportado");
                 }
             default:
@@ -132,7 +134,10 @@ export class InterpreterVisitor extends BaseVisitor {
       * @type {BaseVisitor['visitAgrupacion']}
       */
     visitAgrupacion(node) {
-        return node.exp.accept(this);
+        const finalValue = node.exp.accept(this);
+
+        node.tipo = this.getTrueType(node.exp);
+        return finalValue;
     }
 
     /**
@@ -223,8 +228,28 @@ export class InterpreterVisitor extends BaseVisitor {
       * @type {BaseVisitor['visitPrint']}
       */
     visitPrint(node) {
-        const valor = node.exp.accept(this);
-        this.salida += valor + '\n';
+        let finalOutput = "";
+
+        node.exp.forEach((elem, i) => {
+            if(i > 0) {
+                finalOutput += " "
+            }
+
+            let tempString = "";
+
+            tempString += node.exp[i].accept(this);
+
+            tempString = tempString
+                .replace("\\n", "\n")
+                .replace("\\\\", "\\")
+                .replace("\\\"", "\"")
+                .replace("\\r", "\r")
+                .replace("\\t", "\t")
+
+            finalOutput += tempString
+        })
+
+        this.salida += finalOutput + '\n';
     }
 
 
@@ -243,7 +268,7 @@ export class InterpreterVisitor extends BaseVisitor {
         const valor = node.asgn.accept(this);
         const tipoValor = this.getTrueType(node.asgn);
 
-        if(this.entornoActual.get(nombreVariable).tipo === tipoValor) {
+        if(this.entornoActual.get(node.id).tipo === tipoValor) {
             this.entornoActual.assign(node.id, {
                 tipo: tipoValor,
                 valor

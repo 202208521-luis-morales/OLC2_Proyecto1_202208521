@@ -70,7 +70,7 @@ ClassBody = dcl:VarDcl _ { return dcl }
 // return ['param1', ...['param2', 'param3']]
 Parametros = id:Identificador _ params:("," _ ids:Identificador { return ids })* { return [id, ...params] }
 
-Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('print', { exp }) }
+Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ ";" { return crearNodo('print', { exp: [exp].concat(expList.map(t => t[2])) }) }
     / Bloque:Bloque { return Bloque }
     / "if" _ "(" _ cond:Expresion _ ")" _ stmtTrue:Stmt 
       stmtFalse:(
@@ -204,7 +204,7 @@ Suma = izq:Multiplicacion expansion:(
 }
 
 Multiplicacion = izq:Unaria expansion:(
-  _ op:("*" / "/") _ der:Unaria { return { tipo: op, der } }
+  _ op:("*" / "/" / "%") _ der:Unaria { return { tipo: op, der } }
 )* {
     return expansion.reduce(
       (operacionAnterior, operacionActual) => {
@@ -215,7 +215,7 @@ Multiplicacion = izq:Unaria expansion:(
     )
 }
 
-Unaria = "-" _ num:Unaria { return crearNodo('unaria', { op: '-', exp: num }) }
+Unaria = op:("-" / "!") _ num:Unaria { return crearNodo('unaria', { op, exp: num }) }
 / Dato
 / Llamada
 

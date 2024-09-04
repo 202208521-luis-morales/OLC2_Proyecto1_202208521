@@ -92,12 +92,16 @@
     }
 
     .code-area {
-      resize: none;
+      resize: vertical;
       width: 100%;
-      min-height: 25rem;
       padding: 0.6rem;
       outline: none;
       font-size: 0.9rem;
+    }
+
+    #output {
+      max-height: 40rem;
+      overflow-y: scroll;
     }
   </style>
 </head>
@@ -128,15 +132,7 @@
 
       <div id="alltabcontent">
         <div id="archivo_1" class="tabcontent">
-          <textarea class="code-area"></textarea>
-        </div>
-
-        <div id="archivo_2" class="tabcontent">
-          <textarea class="code-area"></textarea>
-        </div>
-
-        <div id="archivo_3" class="tabcontent">
-          <textarea class="code-area"></textarea>
+          <textarea rows="25" class="code-area"></textarea>
         </div>
       </div>
     </div>
@@ -229,6 +225,7 @@
       const newTextArea = document.createElement("textarea");
 
       newTextArea.classList.add("code-area");
+      newTextArea.rows = "25";
       if (content) {
         newTextArea.textContent = content;
       }
