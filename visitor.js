@@ -29,6 +29,10 @@
 
  * @typedef {import('./nodos').DeclaracionVariable1} DeclaracionVariable1
 
+ * @typedef {import('./nodos').Ternario} Ternario
+
+ * @typedef {import('./nodos').ImplicitAddSubstract} ImplicitAddSubstract
+
 
  * @typedef {import('./nodos').ReferenciaVariable} ReferenciaVariable
 
@@ -89,7 +93,7 @@
  */
 export class BaseVisitor {
 
-    
+
     /**
      * @param {Expresion} node
      * @returns {any}
@@ -97,7 +101,7 @@ export class BaseVisitor {
     visitExpresion(node) {
         throw new Error('Metodo visitExpresion no implementado');
     }
-    
+
 
     /**
      * @param {OperacionBinaria} node
@@ -106,7 +110,7 @@ export class BaseVisitor {
     visitOperacionBinaria(node) {
         throw new Error('Metodo visitOperacionBinaria no implementado');
     }
-    
+
 
     /**
      * @param {OperacionUnaria} node
@@ -115,7 +119,15 @@ export class BaseVisitor {
     visitOperacionUnaria(node) {
         throw new Error('Metodo visitOperacionUnaria no implementado');
     }
-    
+
+    /**
+     * @param {Ternario} node
+     * @returns {any}
+     */
+    visitTernario(node) {
+        throw new Error('Metodo visitTernario no implementado');
+    }
+
 
     /**
      * @param {Agrupacion} node
@@ -124,7 +136,7 @@ export class BaseVisitor {
     visitAgrupacion(node) {
         throw new Error('Metodo visitAgrupacion no implementado');
     }
-    
+
     /**
      * @param {NString} node
      * @returns {any}
@@ -132,7 +144,7 @@ export class BaseVisitor {
     visitNString(node) {
         throw new Error('Metodo visitNString no implementado');
     }
-    
+
     /**
      * @param {NBoolean} node
      * @returns {any}
@@ -185,10 +197,10 @@ export class BaseVisitor {
      * @param {DeclaracionVariable1} node
      * @returns {any}
      */
-     visitDeclaracionVariable1(node) {
+    visitDeclaracionVariable1(node) {
         throw new Error('Metodo visitDeclaracionVariable1 no implementado');
     }
-    
+
 
     /**
      * @param {ReferenciaVariable} node
@@ -197,7 +209,7 @@ export class BaseVisitor {
     visitReferenciaVariable(node) {
         throw new Error('Metodo visitReferenciaVariable no implementado');
     }
-    
+
 
     /**
      * @param {Print} node
@@ -206,7 +218,16 @@ export class BaseVisitor {
     visitPrint(node) {
         throw new Error('Metodo visitPrint no implementado');
     }
-    
+
+
+    /**
+     * @param {ImplicitAddSubstract} node
+     * @returns {any}
+     */
+    visitImplicitAddSubstract(node) {
+        throw new Error('Metodo visitImplicitAddSubstract no implementado');
+    }
+
 
     /**
      * @param {ExpresionStmt} node
@@ -215,7 +236,7 @@ export class BaseVisitor {
     visitExpresionStmt(node) {
         throw new Error('Metodo visitExpresionStmt no implementado');
     }
-    
+
 
     /**
      * @param {Asignacion} node
@@ -224,7 +245,7 @@ export class BaseVisitor {
     visitAsignacion(node) {
         throw new Error('Metodo visitAsignacion no implementado');
     }
-    
+
 
     /**
      * @param {Bloque} node
@@ -233,7 +254,7 @@ export class BaseVisitor {
     visitBloque(node) {
         throw new Error('Metodo visitBloque no implementado');
     }
-    
+
 
     /**
      * @param {If} node
@@ -242,7 +263,7 @@ export class BaseVisitor {
     visitIf(node) {
         throw new Error('Metodo visitIf no implementado');
     }
-    
+
 
     /**
      * @param {While} node
@@ -251,7 +272,7 @@ export class BaseVisitor {
     visitWhile(node) {
         throw new Error('Metodo visitWhile no implementado');
     }
-    
+
 
     /**
      * @param {For} node
@@ -260,7 +281,7 @@ export class BaseVisitor {
     visitFor(node) {
         throw new Error('Metodo visitFor no implementado');
     }
-    
+
 
     /**
      * @param {Break} node
@@ -269,7 +290,7 @@ export class BaseVisitor {
     visitBreak(node) {
         throw new Error('Metodo visitBreak no implementado');
     }
-    
+
 
     /**
      * @param {Continue} node
@@ -278,7 +299,7 @@ export class BaseVisitor {
     visitContinue(node) {
         throw new Error('Metodo visitContinue no implementado');
     }
-    
+
 
     /**
      * @param {Return} node
@@ -287,7 +308,7 @@ export class BaseVisitor {
     visitReturn(node) {
         throw new Error('Metodo visitReturn no implementado');
     }
-    
+
 
     /**
      * @param {Llamada} node
@@ -296,7 +317,7 @@ export class BaseVisitor {
     visitLlamada(node) {
         throw new Error('Metodo visitLlamada no implementado');
     }
-    
+
 
     /**
      * @param {FuncDcl} node
@@ -305,7 +326,7 @@ export class BaseVisitor {
     visitFuncDcl(node) {
         throw new Error('Metodo visitFuncDcl no implementado');
     }
-    
+
 
     /**
      * @param {ClassDcl} node
@@ -314,7 +335,7 @@ export class BaseVisitor {
     visitClassDcl(node) {
         throw new Error('Metodo visitClassDcl no implementado');
     }
-    
+
 
     /**
      * @param {Instancia} node
@@ -323,7 +344,7 @@ export class BaseVisitor {
     visitInstancia(node) {
         throw new Error('Metodo visitInstancia no implementado');
     }
-    
+
 
     /**
      * @param {Get} node
@@ -332,7 +353,7 @@ export class BaseVisitor {
     visitGet(node) {
         throw new Error('Metodo visitGet no implementado');
     }
-    
+
 
     /**
      * @param {Set} node
@@ -341,5 +362,5 @@ export class BaseVisitor {
     visitSet(node) {
         throw new Error('Metodo visitSet no implementado');
     }
-    
+
 }

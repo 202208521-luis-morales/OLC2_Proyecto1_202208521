@@ -1,6 +1,6 @@
 
 {
-  const crearNodo = (tipoNodo, props) =>{
+    const crearNodo = (tipoNodo, props) =>{
     const tipos = {
       'agrupacion': nodos.Agrupacion,
       'binaria': nodos.OperacionBinaria,
@@ -29,7 +29,9 @@
       'null': nodos.NNull,
       'char': nodos.NChar,
       'int': nodos.NInt,
-      'float': nodos.NFloat
+      'float': nodos.NFloat,
+      'ternario': nodos.Ternario,
+      'implicitaddsubstract': nodos.ImplicitAddSubstract
     }
 
     const nodo = new tipos[tipoNodo](props)
@@ -40,14 +42,16 @@
 
 programa = _ dcl:Declaracion* _ { return dcl }
 
-Declaracion = 
-            stmt:Stmt _ { return stmt }
+Declaracion = aso:ImplicitAddSubstract _ { return aso }
+            / stmt:Stmt _ { return stmt }
             / dcl:ClassDcl _ { return dcl }
             / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
             / dcl:FuncDcl _ { return dcl }
             / dcl:Asignacion _ {return dcl}
             
+
+ImplicitAddSubstract = id:Identificador _ op:("+="/"-=") _ exp:Expresion ";" { return crearNodo('implicitaddsubstract', { id, op, exp }) }
 
 VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float") _ id:Identificador _ optValue:("=" _ exp:Expresion)? _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, exp: optValue ? optValue[2] : null }) }
 
@@ -89,7 +93,9 @@ ForInit = dcl:VarDcl { return dcl }
 
 Identificador = [a-zA-Z][a-zA-Z0-9]* { return text() }
 
-Expresion = Comparacion
+Expresion
+  = left:BinOr rest:TernaryRest?
+    { return rest ? crearNodo('ternario', {condition: left, trueExpr: rest[0], falseExpr: rest[1]}) : left; }
 
 // a.b.c.d = 2
 // a.b() = 2
@@ -119,7 +125,59 @@ Asignacion = asignado:Expresion _ "=" _ asgn:Asignacion
   }
 */
 
+TernaryRest
+  = _ "?" _ trueExpr:Expresion _ ":" _ falseExpr:Expresion
+    { return [trueExpr, falseExpr]; }
 
+BinOr = izq:BinAnd expansion:(
+  _ op:("||") _ der:BinAnd { return { tipo: op, der } }
+)* { 
+  return expansion.reduce(
+    (operacionAnterior, operacionActual) => {
+      const { tipo, der } = operacionActual
+      return crearNodo('binaria', { op:tipo, izq: operacionAnterior, der })
+    },
+    izq
+  )
+}
+
+BinAnd = izq:BinEqualNotEqual expansion:(
+  _ op:("&&") _ der:BinEqualNotEqual { return { tipo: op, der } }
+)* { 
+  return expansion.reduce(
+    (operacionAnterior, operacionActual) => {
+      const { tipo, der } = operacionActual
+      return crearNodo('binaria', { op:tipo, izq: operacionAnterior, der })
+    },
+    izq
+  )
+}
+
+BinEqualNotEqual = izq:BinInequity expansion:(
+  _ op:("==" / "!=") _ der:BinInequity { return { tipo: op, der } }
+)* { 
+  return expansion.reduce(
+    (operacionAnterior, operacionActual) => {
+      const { tipo, der } = operacionActual
+      return crearNodo('binaria', { op:tipo, izq: operacionAnterior, der })
+    },
+    izq
+  )
+}
+
+BinInequity = izq:Suma expansion:(
+  _ op:("<=" / ">=" / "<" / ">") _ der:Suma { return { tipo: op, der } }
+)* { 
+  return expansion.reduce(
+    (operacionAnterior, operacionActual) => {
+      const { tipo, der } = operacionActual
+      return crearNodo('binaria', { op:tipo, izq: operacionAnterior, der })
+    },
+    izq
+  )
+}
+
+/*
 Comparacion = izq:Suma expansion:(
   _ op:("<=" / "==") _ der:Suma { return { tipo: op, der } }
 )* { 
@@ -131,7 +189,7 @@ Comparacion = izq:Suma expansion:(
     izq
   )
 }
-
+*/
 
 Suma = izq:Multiplicacion expansion:(
   _ op:("+" / "-") _ der:Multiplicacion { return { tipo: op, der } }

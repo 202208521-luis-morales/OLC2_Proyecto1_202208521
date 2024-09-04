@@ -46,9 +46,11 @@ export class OperacionBinaria extends Expresion {
     /**
     * @param {Object} options
     * @param {Expresion} options.izq Expresion izquierda de la operacion
- * @param {Expresion} options.der Expresion derecha de la operacion
- * @param {string} options.op Operador de la operacion
+    * @param {Expresion} options.der Expresion derecha de la operacion
+    * @param {string} options.op Operador de la operacion
+    * @param {string} options
     */
+   
     constructor({ izq, der, op }) {
         super();
         
@@ -58,13 +60,14 @@ export class OperacionBinaria extends Expresion {
         */
         this.izq = izq;
 
+        this.tipo = null;
+
 
         /**
          * Expresion derecha de la operacion
          * @type {Expresion}
         */
         this.der = der;
-
 
         /**
          * Operador de la operacion
@@ -87,7 +90,8 @@ export class OperacionUnaria extends Expresion {
     /**
     * @param {Object} options
     * @param {Expresion} options.exp Expresion de la operacion
- * @param {string} options.op Operador de la operacion
+    * @param {string} options.op Operador de la operacion
+    * @param {string} options.tipo Operador de la operacion
     */
     constructor({ exp, op }) {
         super();
@@ -97,6 +101,8 @@ export class OperacionUnaria extends Expresion {
          * @type {Expresion}
         */
         this.exp = exp;
+
+        this.tipo = null;
 
 
         /**
@@ -112,6 +118,51 @@ export class OperacionUnaria extends Expresion {
      */
     accept(visitor) {
         return visitor.visitOperacionUnaria(this);
+    }
+}
+
+export class Ternario extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.condition Expresion de la operacion
+    * @param {Expresion} options.trueExpr Operador de la operacion
+    * @param {Expresion} options.falseExpr
+    * @param {string} options.tipo Operador de la operacion
+    */
+    constructor({ condition, trueExpr, falseExpr }) {
+        super();
+        
+        /**
+         * Condicion de la operacion
+         * @type {Expresion}
+        */
+        this.condition = condition;
+
+        /**
+         * Si la condicione es verdadera
+         * @type {Expresion}
+        */
+        this.trueExpr = trueExpr;
+
+        /**
+         * Si la condicione es falsa
+         * @type {Expresion}
+        */
+        this.falseExpr = falseExpr;
+
+        /**
+         * Expresion de la operacion
+         * @type {string}
+        */
+        this.tipo = null;
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitTernario(this);
     }
 }
     
@@ -130,6 +181,7 @@ export class Agrupacion extends Expresion {
         */
         this.exp = exp;
 
+        this.tipo = null;
     }
 
     /**
@@ -428,6 +480,45 @@ export class ExpresionStmt extends Expresion {
      */
     accept(visitor) {
         return visitor.visitExpresionStmt(this);
+    }
+}
+
+export class ImplicitAddSubstract extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id variable
+    * @param {string} options.op Operador
+    * @param {Expresion} options.exp Expresion a asignar
+    */
+    constructor({ id, op, exp }) {
+        super();
+        
+        /**
+         * Identificador de la variable
+         * @type {string}
+        */
+        this.id = id;
+
+        /**
+         * Operador
+         * @type {string}
+        */
+        this.op = op;
+
+        /**
+         * Expresion a asignar
+         * @type {Expresion}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitImplicitAddSubstract(this);
     }
 }
     
@@ -889,4 +980,4 @@ export class Set extends Expresion {
     }
 }
     
-export default { NChar, NInt, NFloat, Expresion, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, ImplicitAddSubstract, NInt, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
