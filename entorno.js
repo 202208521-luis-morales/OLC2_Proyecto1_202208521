@@ -36,6 +36,14 @@ export class Entorno {
     }
 
     /**
+     * @param {string} nombre
+     * @returns {boolean}
+     */
+    exists(nombre) {
+        return this.valores[nombre] !== undefined;
+    }
+
+    /**
    * @param {string} nombre
    * @param {any} valor
    */

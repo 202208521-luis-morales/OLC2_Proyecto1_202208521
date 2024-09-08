@@ -87,13 +87,13 @@ export class InterpreterVisitor extends BaseVisitor {
         node.tipo = expType;
         switch (node.op) {
             case '-':
-                if(expType === "float" || expType === "int") {
+                if (expType === "float" || expType === "int") {
                     return -exp;
                 } else {
                     throw new Error("Tipo no soportado");
                 }
             case '!':
-                if(expType === "boolean") {
+                if (expType === "boolean") {
                     return !exp;
                 } else {
                     throw new Error("Tipo no soportado");
@@ -109,12 +109,12 @@ export class InterpreterVisitor extends BaseVisitor {
     visitTernario(node) {
         const resultCondition = node.condition.accept(this);
 
-        if(this.getTrueType(node.condition) != "boolean") {
+        if (this.getTrueType(node.condition) != "boolean") {
             throw new Error("La condición debe de ser booleana");
         }
 
-        if(typeof resultCondition === 'boolean') {
-            if(resultCondition === true) {
+        if (typeof resultCondition === 'boolean') {
+            if (resultCondition === true) {
                 const resultTrueExpr = node.trueExpr.accept(this);
 
                 node.tipo = this.getTrueType(node.trueExpr);
@@ -187,6 +187,11 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitDeclaracionVariable(node) {
         const nombreVariable = node.id;
+
+        if (this.entornoActual.exists(nombreVariable)) {
+            throw new Error("Variable ya existe");
+        }
+
         const valorVariable = node.exp.accept(this);
         const tipoVariable = this.getTrueType(node.exp);
 
@@ -198,6 +203,11 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitDeclaracionVariable1(node) {
         const nombreVariable = node.id;
+
+        if (this.entornoActual.exists(nombreVariable)) {
+            throw new Error("Variable ya existe");
+        }
+
         const tipoVariable = node.type;
 
         if (node.exp !== null) {
@@ -231,7 +241,7 @@ export class InterpreterVisitor extends BaseVisitor {
         let finalOutput = "";
 
         node.exp.forEach((elem, i) => {
-            if(i > 0) {
+            if (i > 0) {
                 finalOutput += " "
             }
 
@@ -252,7 +262,6 @@ export class InterpreterVisitor extends BaseVisitor {
         this.salida += finalOutput + '\n';
     }
 
-
     /**
       * @type {BaseVisitor['visitExpresionStmt']}
       */
@@ -268,7 +277,7 @@ export class InterpreterVisitor extends BaseVisitor {
         const valor = node.asgn.accept(this);
         const tipoValor = this.getTrueType(node.asgn);
 
-        if(this.entornoActual.get(node.id).tipo === tipoValor) {
+        if (this.entornoActual.get(node.id).tipo === tipoValor) {
             this.entornoActual.assign(node.id, {
                 tipo: tipoValor,
                 valor
@@ -286,12 +295,12 @@ export class InterpreterVisitor extends BaseVisitor {
         const valor = node.exp.accept(this);
         const tipoValor = this.getTrueType(node.exp);
 
-        if(this.entornoActual.get(node.id).tipo === "int" || this.entornoActual.get(node.id).tipo === "float" || this.entornoActual.get(node.id).tipo === "string") {
+        if (this.entornoActual.get(node.id).tipo === "int" || this.entornoActual.get(node.id).tipo === "float" || this.entornoActual.get(node.id).tipo === "string") {
             this.entornoActual.assign(node.id, {
                 tipo: tipoValor,
-                valor: node.op === "+=" ? this.entornoActual.get(node.id).valor + valor : this.entornoActual.get(node.id).valor - valor 
+                valor: node.op === "+=" ? this.entornoActual.get(node.id).valor + valor : this.entornoActual.get(node.id).valor - valor
             });
-    
+
             return valor;
         } else {
             throw new Error("Solo se puede hacer operación implícita con tipo 'int' o 'float'");
@@ -326,6 +335,64 @@ export class InterpreterVisitor extends BaseVisitor {
             node.stmtFalse.accept(this);
         }
 
+    }
+
+    /**
+     * @type {BaseVisitor['visitSwitch']}
+     */
+    visitSwitch(node) {
+        let i = 0;
+        let alreadyMatched = false;
+
+        console.log("A")
+        while (i < node.listCases.length) {
+            const evaluatedConditionB = new nodos.OperacionBinaria({
+                izq: node.cond,
+                der: node.listCases[i].exp,
+                op: "=="
+            });
+            console.log("B");
+            const evaluatedCondition = evaluatedConditionB.accept(this);
+
+            if ((evaluatedCondition === true) && (alreadyMatched === false)) alreadyMatched = true;
+            if (alreadyMatched === true) {
+                if (node.listCases[i].dcls.length > 0) {
+                    try {
+                        console.log("C")
+
+                        const dclsToEvaluate = new nodos.Bloque({
+                            dcls: node.listCases[i].dcls
+                        });
+
+                        dclsToEvaluate.accept(this);
+
+                    } catch (error) {
+                        console.log("D")
+                        if (error instanceof BreakException) {
+                            console.log("E")
+                            break;
+                        }
+
+                        console.log("F")
+                        throw error;
+                    }
+
+                }
+            }
+            i++;
+        }
+
+        if (i === node.listCases.length) {
+            console.log("G")
+            if (node.defaultCase != undefined) {
+                console.log("H")
+                const dclsToEvaluate = new nodos.Bloque({
+                    dcls: node.defaultCase.dcls
+                });
+
+                dclsToEvaluate.accept(this);
+            }
+        }
     }
 
     /**
@@ -526,7 +593,7 @@ export class InterpreterVisitor extends BaseVisitor {
             || node.constructor.name === "Agrupacion"
         ) {
             return node.tipo;
-        } else if(node.constructor.name === "ReferenciaVariable") {
+        } else if (node.constructor.name === "ReferenciaVariable") {
             return this.entornoActual.get(node.id).tipo
         } else {
             return getNativeType(node.constructor.name);
@@ -553,134 +620,134 @@ function getNativeType(name) {
 
 function getBinOpType(typeA, typeB, op) {
     switch (typeA) {
-      case "int":
-        switch (op) {
-          case "+":
-          case "-":
-          case "*":
-          case "/":
-            if(typeB === "float") {
-              return "float";
-            }
-          case "%":
-            switch (typeB) {
-              case "int":
-                return "int";
-          
-              default:
-                throw new Error("Tipos incorrectos");
+        case "int":
+            switch (op) {
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    if (typeB === "float") {
+                        return "float";
+                    }
+                case "%":
+                    switch (typeB) {
+                        case "int":
+                            return "int";
+
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+                case "==":
+                case "!=":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    switch (typeB) {
+                        case "int":
+                        case "float":
+                            return "boolean";
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+                default:
+                    throw new Error("Operador incorrecto");
             }
 
-          case "==":
-          case "!=":
-          case ">":
-          case "<":
-          case ">=":
-          case "<=":
-            switch (typeB) {
-              case "int":
-              case "float":
-                return "boolean";
-              default:
-                throw new Error("Tipos incorrectos");
-            }
-            
-          default:
-            throw new Error("Operador incorrecto");
-        }
+        case "float":
+            switch (op) {
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    switch (typeB) {
+                        case "int":
+                        case "float":
+                            return "float";
 
-      case "float":
-        switch (op) {
-          case "+":
-          case "-":
-          case "*":
-          case "/":
-            switch (typeB) {
-              case "int":
-              case "float":
-                return "float";
-          
-              default:
-                throw new Error("Tipos incorrectos");
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+                case "==":
+                case "!=":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    switch (typeB) {
+                        case "int":
+                        case "float":
+                            return "boolean";
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+                default:
+                    throw new Error("Tipos incorrectos");
             }
-      
-          case "==":
-          case "!=":
-          case ">":
-          case "<":
-          case ">=":
-          case "<=":
-            switch (typeB) {
-              case "int":
-              case "float":
-                return "boolean";
-              default:
-                throw new Error("Tipos incorrectos");
+
+
+        case "string":
+            switch (op) {
+                case "+":
+                    switch (typeB) {
+                        case "string":
+                            return "string";
+
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+
+                case "==":
+                case "!=":
+                    switch (typeB) {
+                        case "string":
+                            return "boolean";
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+                default:
+                    throw new Error("Tipos incorrectos");
             }
-          default:
+
+        case "char":
+            switch (op) {
+                case "==":
+                case "!=":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    switch (typeB) {
+                        case "string":
+                            return "boolean";
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+                default:
+                    throw new Error("Tipos incorrectos");
+            }
+
+        case "boolean":
+            switch (op) {
+                case "&&":
+                case "||":
+                    switch (typeB) {
+                        case "boolean":
+                            return "boolean";
+                        default:
+                            throw new Error("Tipos incorrectos");
+                    }
+
+                default:
+                    throw new Error("Tipos incorrectos");
+            }
+        default:
             throw new Error("Tipos incorrectos");
-        }
-
-
-      case "string":
-        switch (op) {
-          case "+":
-            switch (typeB) {
-              case "string":
-                return "string";
-          
-              default:
-                throw new Error("Tipos incorrectos");
-            }
-            
-      
-          case "==":
-          case "!=":
-            switch (typeB) {
-              case "string":
-                return "boolean";
-              default:
-                throw new Error("Tipos incorrectos");
-            }
-            
-          default:
-            throw new Error("Tipos incorrectos");
-        }
-
-      case "char":
-        switch (op) {
-          case "==":
-          case "!=":
-          case ">":
-          case "<":
-          case ">=":
-          case "<=":
-            switch (typeB) {
-              case "string":
-                return "boolean";
-              default:
-                throw new Error("Tipos incorrectos");
-            }
-            
-          default:
-            throw new Error("Tipos incorrectos");
-        }
-
-      case "boolean":
-        switch (op) {
-          case "&&":
-          case "||":
-            switch (typeB) {
-              case "boolean":
-                return "boolean";
-              default:
-                throw new Error("Tipos incorrectos");
-            }
-            
-          default:
-            throw new Error("Tipos incorrectos");
-        }
-      default:
-        throw new Error("Tipos incorrectos");
     }
 }

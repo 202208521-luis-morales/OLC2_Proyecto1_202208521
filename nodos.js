@@ -620,6 +620,44 @@ export class If extends Expresion {
         return visitor.visitIf(this);
     }
 }
+
+export class Switch extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.cond Condicional
+    * @param {{exp: Expresion, dcls: Expresion[]}[]} options.listCases
+    * @param {{exp: Expresion, dcls: Expresion[]}|undefined} options.defaultCase
+    */
+    constructor({ cond, listCases, defaultCase }) {
+        super();
+        
+        /**
+         * @type {Expresion}
+        */
+        this.cond = cond;
+
+
+        /**
+         * @type {{exp: Expresion, dcls: Expresion[]}[]}
+        */
+        this.listCases = listCases;
+
+
+        /**
+         * @type {{exp: Expresion, dcls: Expresion[]}|undefined}
+        */
+        this.defaultCase = defaultCase;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitSwitch(this);
+    }
+}
     
 export class While extends Expresion {
 
@@ -980,4 +1018,4 @@ export class Set extends Expresion {
     }
 }
     
-export default { NChar, ImplicitAddSubstract, NInt, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, ImplicitAddSubstract, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }

@@ -51,6 +51,8 @@
 
  * @typedef {import('./nodos').If} If
 
+ * @typedef {import('./nodos').Switch} Switch
+
 
  * @typedef {import('./nodos').While} While
 
@@ -261,6 +263,14 @@ export class BaseVisitor {
      * @returns {any}
      */
     visitIf(node) {
+        throw new Error('Metodo visitIf no implementado');
+    }
+
+    /**
+     * @param {Switch} node
+     * @returns {any}
+     */
+    visitSwitch(node) {
         throw new Error('Metodo visitIf no implementado');
     }
 

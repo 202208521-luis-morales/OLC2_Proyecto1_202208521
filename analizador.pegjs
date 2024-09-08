@@ -25,6 +25,7 @@
       'get': nodos.Get,
       'set': nodos.Set,
       'string': nodos.NString,
+      'switch': nodos.Switch,
       'boolean': nodos.NBoolean,
       'null': nodos.NNull,
       'char': nodos.NChar,
@@ -42,16 +43,16 @@
 
 programa = _ dcl:Declaracion* _ { return dcl }
 
-Declaracion = aso:ImplicitAddSubstract _ { return aso }
+Declaracion = aso:ImplicitAddSubstract _ ";" _ { return aso }
             / stmt:Stmt _ { return stmt }
             / dcl:ClassDcl _ { return dcl }
             / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
             / dcl:FuncDcl _ { return dcl }
-            / dcl:Asignacion _ {return dcl}
+            / dcl:Asignacion _ ";" _ {return dcl}
             
 
-ImplicitAddSubstract = id:Identificador _ op:("+="/"-=") _ exp:Expresion ";" { return crearNodo('implicitaddsubstract', { id, op, exp }) }
+ImplicitAddSubstract = id:Identificador _ op:("+="/"-=") _ exp:Expresion { return crearNodo('implicitaddsubstract', { id, op, exp }) }
 
 VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float") _ id:Identificador _ optValue:("=" _ exp:Expresion)? _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, exp: optValue ? optValue[2] : null }) }
 
@@ -76,8 +77,11 @@ Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ 
       stmtFalse:(
         _ "else" _ stmtFalse:Stmt { return stmtFalse } 
       )? { return crearNodo('if', { cond, stmtTrue, stmtFalse }) }
+    / "switch" _ "(" _ cond:Expresion _ ")" _ "{" _ listCases:("case" _ exp:Expresion _ ":" _ dcls:(Declaracion)* { return {exp, dcls} })+ _ defaultCase:("default" _ ":" _ dcls:(Declaracion)* { return { dcls } }) _ "}" {
+      return crearNodo('switch', { cond, listCases, defaultCase })
+    }
     / "while" _ "(" _ cond:Expresion _ ")" _ stmt:Stmt { return crearNodo('while', { cond, stmt }) }
-    / "for" _ "(" _ init:ForInit _ cond:Expresion _ ";" _ inc:Expresion _ ")" _ stmt:Stmt {
+    / "for" _ "(" _ init:(VarDcl1 / VarDcl) _ cond:Expresion _ ";" _ inc:(Asignacion / ImplicitAddSubstract) _ ")" _ stmt:Stmt {
       return crearNodo('for', { init, cond, inc, stmt })
     }
     / "break" _ ";" { return crearNodo('break') }
@@ -87,9 +91,11 @@ Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ 
 
 Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
 
+/*
 ForInit = dcl:VarDcl { return dcl }
         / exp:Expresion _ ";" { return exp }
         / ";" { return null }
+*/
 
 Identificador = [a-zA-Z][a-zA-Z0-9]* { return text() }
 
@@ -101,7 +107,7 @@ Expresion
 // a.b() = 2
 
 Asignacion
-  = name:Identificador _ "=" _ value:Expresion _ ";" {
+  = name:Identificador _ "=" _ value:Expresion _ {
       return crearNodo('asignacion', { id: name, asgn: value })
   }
 
