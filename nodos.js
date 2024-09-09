@@ -240,6 +240,39 @@ export class NBoolean extends Expresion {
     }
 }
 
+export class NVector extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion[]} options.valor
+    */
+    constructor({ valor }) {
+        super();
+        
+        /**
+         * @type {Expresion[]}
+        */
+        this.valor = valor;
+
+        /**
+         * @type { string | null }
+        */
+        this.tipo = null;
+
+        /**
+         * @type {number}
+        */
+        this.dimension = 1;
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNVector(this);
+    }
+}
+
 export class NNull extends Expresion {
 
     /**
@@ -335,16 +368,51 @@ export class NFloat extends Expresion {
         return visitor.visitNFloat(this);
     }
 }
-    
+
+export class NewExp extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.type
+    * @param {number[]} options.dimensions
+    * @param {number} options.level
+    */
+    constructor({ type, dimensions, level }) {
+        super();
+        
+        /**
+         * @type {string}
+        */
+        this.tipo = type;
+
+        /**
+         * @type {number[]}
+        */
+        this.dimensions = dimensions;
+
+        /**
+         * @type {number}
+        */
+        this.level = level;
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNewExp(this);
+    }
+}   
 
 export class DeclaracionVariable1 extends Expresion {
 
     /**
     * @param {Object} options
     * @param {string} options.id Identificador de la variable
- * @param {Expresion} options.exp Expresion de la variable
+    * @param {number} options.numBrackets Identificador de la variable
+    * @param {Expresion} options.exp Expresion de la variable
     */
-    constructor({ type, id, exp }) {
+    constructor({ type, id, numBrackets, exp }) {
         super();
         
         /**
@@ -352,6 +420,12 @@ export class DeclaracionVariable1 extends Expresion {
          * @type {string}
         */
         this.id = id;
+
+        /**
+         * Identificador de la variable
+         * @type {number}
+        */
+        this.numBrackets = numBrackets;
 
 
         /**
@@ -414,8 +488,9 @@ export class ReferenciaVariable extends Expresion {
     /**
     * @param {Object} options
     * @param {string} options.id Identificador de la variable
+    * @param {number[]} options.dimensions Dimensiones e indices
     */
-    constructor({ id }) {
+    constructor({ id, dimensions }) {
         super();
         
         /**
@@ -423,6 +498,12 @@ export class ReferenciaVariable extends Expresion {
          * @type {string}
         */
         this.id = id;
+
+        /**
+         * Dimensiones e indices
+         * @type {number[]}
+        */
+        this.dimensions = dimensions;
     }
 
     /**
@@ -527,9 +608,10 @@ export class Asignacion extends Expresion {
     /**
     * @param {Object} options
     * @param {string} options.id Identificador de la variable
- * @param {Expresion} options.asgn Expresion a asignar
+    * @param {Expresion} options.asgn Expresion a asignar
+    * @param {number[]} options.indexes Indexes si es array/vector
     */
-    constructor({ id, asgn }) {
+    constructor({ id, asgn, indexes }) {
         super();
         
         /**
@@ -544,6 +626,12 @@ export class Asignacion extends Expresion {
          * @type {Expresion}
         */
         this.asgn = asgn;
+
+        /**
+         * Indexes si es array/vector
+         * @type {number[]}
+        */
+        this.indexes = indexes;
 
     }
 
@@ -1018,4 +1106,4 @@ export class Set extends Expresion {
     }
 }
     
-export default { NChar, ImplicitAddSubstract, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, NVector, NewExp, ImplicitAddSubstract, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }

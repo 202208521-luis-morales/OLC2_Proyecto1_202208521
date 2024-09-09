@@ -25,6 +25,8 @@
 
  * @typedef {import('./nodos').NFloat} NFloat
 
+ * @typedef {import('./nodos').NVector} NVector
+
  * @typedef {import('./nodos').DeclaracionVariable} DeclaracionVariable
 
  * @typedef {import('./nodos').DeclaracionVariable1} DeclaracionVariable1
@@ -32,6 +34,8 @@
  * @typedef {import('./nodos').Ternario} Ternario
 
  * @typedef {import('./nodos').ImplicitAddSubstract} ImplicitAddSubstract
+
+ * @typedef {import('./nodos').NewExp} NewExp
 
 
  * @typedef {import('./nodos').ReferenciaVariable} ReferenciaVariable
@@ -371,6 +375,22 @@ export class BaseVisitor {
      */
     visitSet(node) {
         throw new Error('Metodo visitSet no implementado');
+    }
+
+    /**
+     * @param {NVector} node
+     * @returns {any}
+     */
+    visitNVector(node) {
+        throw new Error('Metodo visitNVector no implementado');
+    }
+
+    /**
+     * @param {NewExp} node
+     * @returns {any}
+     */
+    visitNewExp(node) {
+        throw new Error('Metodo visitNewExp no implementado');
     }
 
 }
