@@ -27,9 +27,13 @@
 
  * @typedef {import('./nodos').NVector} NVector
 
+ * @typedef {import('./nodos').NStruct} NStruct
+
  * @typedef {import('./nodos').DeclaracionVariable} DeclaracionVariable
 
  * @typedef {import('./nodos').DeclaracionVariable1} DeclaracionVariable1
+
+ * @typedef {import('./nodos').StructDecl} StructDecl
 
  * @typedef {import('./nodos').Ternario} Ternario
 
@@ -152,6 +156,14 @@ export class BaseVisitor {
     }
 
     /**
+     * @param {NStruct} node
+     * @returns {any}
+     */
+    visitNStruct(node) {
+        throw new Error('Metodo visitNStruct no implementado');
+    }
+
+    /**
      * @param {NBoolean} node
      * @returns {any}
      */
@@ -197,6 +209,14 @@ export class BaseVisitor {
      */
     visitDeclaracionVariable(node) {
         throw new Error('Metodo visitDeclaracionVariable no implementado');
+    }
+
+    /**
+     * @param {StructDecl} node
+     * @returns {any}
+     */
+    visitStructDecl(node) {
+        throw new Error('Metodo visitStructDecl no implementado');
     }
 
     /**

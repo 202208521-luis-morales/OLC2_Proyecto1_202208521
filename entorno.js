@@ -21,13 +21,12 @@ export class Entorno {
      * @param {number} dimension
      * @param {any} valor
      */
-    set(nombre, tipoSimbolo, tipoVariable, dimension, valor) {
+    set(nombre, tipoSimbolo, tipoVariable, valor) {
         // TODO: si algo ya está definido, lanzar error
 
         this.valores[nombre] = {
             tipoSimbolo,
             tipoVariable,
-            dimension,
             valor
         };
     }

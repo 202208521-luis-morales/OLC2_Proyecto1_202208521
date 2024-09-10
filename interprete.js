@@ -244,7 +244,58 @@ export class InterpreterVisitor extends BaseVisitor {
         const valorVariable = node.exp.accept(this);
         const tipoVariable = this.getTrueType(node.exp);
 
-        this.entornoActual.set(nombreVariable, "simple", tipoVariable, 1, valorVariable);
+        this.entornoActual.set(nombreVariable, "simple", tipoVariable, valorVariable);
+    }
+
+    /**
+     * @type {BaseVisitor['visitStructDecl']}
+     */
+    visitStructDecl(node) {
+        if (!this.entornoActual.exists(node.id)) {
+            this.entornoActual.set(node.id, "struct", "struct", node.attrs);
+        }
+    }
+
+    /**
+     * @type {BaseVisitor['visitNStruct']}
+     */
+    visitNStruct(node) {
+        let objectToReturn = {};
+
+        if (!this.entornoActual.exists(node.id) || this.entornoActual.get(node.id).tipoSimbolo !== "struct") throw new Error("Struct para modelar no existente");
+
+        const structure = this.entornoActual.get(node.id);
+
+        structure.forEach((elem) => {
+            let attrFoundIndex = -1;
+
+            // Método: Buscar si existe el elemento en node.vals
+            for (let i = 0; i < node.vals.length; i++) {
+                if (node.vals[i].id === elem.iden) {
+                    attrFoundIndex = i;
+
+                    break;
+                }
+            }
+
+            if (attrFoundIndex === -1) {
+                throw new Error("Struct no cumple con la estrucutura del la estructura del Struct de " + node.id);
+            } else {
+                let acceptedVal = node.vals[attrFoundIndex].exp.accept(this);
+
+                if (this.getTrueType(node.vals[attrFoundIndex].exp) !== elem.tipo) {
+                    throw new Error("Struct no cumple con la estrucutura del la estructura del Struct de " + node.id);
+                }
+
+                if (node.vals[attrFoundIndex].exp.constructor.name === "NStruct") {
+                    this.visitNStruct(node.vals[attrFoundIndex].exp);
+                }
+
+                objectToReturn[node.vals[attrFoundIndex].id] = acceptedVal;
+            }
+        });
+
+        return objectToReturn;
     }
 
     /**
@@ -253,7 +304,6 @@ export class InterpreterVisitor extends BaseVisitor {
     visitDeclaracionVariable1(node) {
         const nombreVariable = node.id;
         let typeSymbol = "simple";
-        let dimension = 1;
 
         if (this.entornoActual.exists(nombreVariable)) {
             throw new Error("Variable ya existe");
@@ -265,25 +315,20 @@ export class InterpreterVisitor extends BaseVisitor {
             const valorVariable = node.exp.accept(this);
             let tipoValor = "";
 
-            if (node.exp.constructor.name === "NVector") {
+            if ((node.exp.constructor.name === "NewExp") || (node.exp.constructor.name === "NVector")) {
                 typeSymbol = "vector";
                 tipoValor = node.exp.tipo;
-                dimension = node.exp.dimension;
-            } else if (node.exp.constructor.name === "NewExp") {
-                typeSymbol = "vector";
-                tipoValor = node.exp.tipo;
-                dimension = node.exp.level;
             } else {
                 tipoValor = this.getTrueType(node.exp);
             }
 
             if (tipoValor === tipoVariable) {
-                this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, dimension, valorVariable);
+                this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable);
             } else {
                 throw new Error("Tipos no coinciden");
             }
         } else {
-            this.entornoActual.set(nombreVariable, "simple", tipoVariable, 1, null);
+            this.entornoActual.set(nombreVariable, "simple", tipoVariable, null);
         }
     }
 
@@ -682,6 +727,8 @@ export class InterpreterVisitor extends BaseVisitor {
             return node.tipo;
         } else if (node.constructor.name === "ReferenciaVariable") {
             return this.entornoActual.get(node.id).tipoVariable
+        } else if (node.constructor.name === "NStruct") {
+            return node.id;
         } else {
             return getNativeType(node.constructor.name);
         }
@@ -884,3 +931,5 @@ function defaultValueByType(type) {
             return 0;
     }
 }
+
+const reservedWords = ["string", "boolean", "char", "int", "float"];

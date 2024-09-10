@@ -34,7 +34,9 @@
       'vector': nodos.NVector,
       'ternario': nodos.Ternario,
       'implicitaddsubstract': nodos.ImplicitAddSubstract,
-      'newExp': nodos.NewExp
+      'newExp': nodos.NewExp,
+      'structDecl': nodos.StructDecl,
+      'structData': nodos.NStructData
     }
 
     const nodo = new tipos[tipoNodo](props)
@@ -46,15 +48,20 @@
 programa = _ dcl:Declaracion* _ { return dcl }
 
 Declaracion = aso:ImplicitAddSubstract _ ";" _ { return aso }
-            / stmt:Stmt _ { return stmt }
+            / dcl:StructDecl _ { return dcl }
             / dcl:ClassDcl _ { return dcl }
             / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
             / dcl:FuncDcl _ { return dcl }
             / dcl:Asignacion _ ";" _ {return dcl}
+            / stmt:Stmt _ { return stmt }
             
 
 ImplicitAddSubstract = id:Identificador _ op:("+="/"-=") _ exp:Expresion { return crearNodo('implicitaddsubstract', { id, op, exp }) }
+
+StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*)) _ iden:Identificador _ ";" _ { return { tipo, iden } })+ _ "}" _ ";" {
+  return crearNodo('structDecl', { id, attrs })
+}
 
 VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float") _ brackets:( _"[" _ "]" _ )* _ id:Identificador _ optValue:("=" _ exp:Expresion)? _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, numBrackets: brackets.length, exp: optValue ? optValue[2] : null }) }
 
@@ -271,6 +278,7 @@ Dato = [0-9]+"."[0-9]+ {return crearNodo('float', { valor: Number(text()) })}
   / text:null { return crearNodo('null', { valor: text })}
   / text:boolean { return crearNodo('boolean', { valor: text })}
   / text:char { return crearNodo('char', { valor: text })}
+  / id:Identificador _ "{" _ firstVal:(id2:Identificador _ ":" _ exp1:Expresion { return { id: id2, exp: exp1 } }) _ vals:( _ "," _ id3:Identificador _ ":" _ exp2:Expresion _ return { id: id3, exp: exp2 } )* _ "}" { vals.unshift(firstVal); return crearNodo('structData', { id, vals })}
   / id:Identificador _ dimensions:( _ "[" _ num:([0-9])+ _ "]" _ { return num; })* { return crearNodo('referenciaVariable', { id, dimensions: dimensions.map((elem) => Number(elem)) }) }
 
 //  / "new" _ id:Identificador _ "(" _ args:Argumentos? _ ")" { return crearNodo('instancia', { id, args: args || [] }) }

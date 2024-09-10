@@ -369,6 +369,37 @@ export class NFloat extends Expresion {
     }
 }
 
+export class NStruct extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id Identificador de la variable
+    * @param {{id: string, exp: Expresion}[]} options.vals
+    */
+    constructor({ id, vals }) {
+        super();
+        
+        /**
+         * @type {string}
+        */
+        this.id = id;
+
+        /**
+         * @type {{id: string, exp: Expresion}[]}
+        */
+        this.vals = vals;
+
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitNStruct(this);
+    }
+}
+
 export class NewExp extends Expresion {
 
     /**
@@ -480,6 +511,39 @@ export class DeclaracionVariable extends Expresion {
      */
     accept(visitor) {
         return visitor.visitDeclaracionVariable(this);
+    }
+}
+
+export class StructDecl extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id Identificador de la variable
+    * @param {{tipo: string, iden: string}[]} options.attrs
+    */
+    constructor({ id, attrs }) {
+        super();
+        
+        /**
+         * Identificador de la variable
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * Datos a guardar
+         * @type {{tipo: string, iden: string}[]}
+        */
+        this.attrs = attrs;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitStructDecl(this);
     }
 }
     
@@ -1106,4 +1170,4 @@ export class Set extends Expresion {
     }
 }
     
-export default { NChar, NVector, NewExp, ImplicitAddSubstract, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, NStruct ,StructDecl, NVector, NewExp, ImplicitAddSubstract, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
