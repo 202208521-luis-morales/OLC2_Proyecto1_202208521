@@ -11,6 +11,9 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "lodash": "^4.17.21",
+    "lodash-cli": "^4.17.5",
+    "lodash-es": "^4.17.21",
     "peggy": "^4.0.3"
   }
 }

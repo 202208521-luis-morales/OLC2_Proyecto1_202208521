@@ -33,7 +33,6 @@
       'float': nodos.NFloat,
       'vector': nodos.NVector,
       'ternario': nodos.Ternario,
-      'implicitaddsubstract': nodos.ImplicitAddSubstract,
       'newExp': nodos.NewExp,
       'structDecl': nodos.StructDecl,
       'structData': nodos.NStructData
@@ -47,8 +46,7 @@
 
 programa = _ dcl:Declaracion* _ { return dcl }
 
-Declaracion = aso:ImplicitAddSubstract _ ";" _ { return aso }
-            / dcl:StructDecl _ { return dcl }
+Declaracion = dcl:StructDecl _ { return dcl }
             / dcl:ClassDcl _ { return dcl }
             / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
@@ -56,10 +54,7 @@ Declaracion = aso:ImplicitAddSubstract _ ";" _ { return aso }
             / dcl:Asignacion _ ";" _ {return dcl}
             / stmt:Stmt _ { return stmt }
             
-
-ImplicitAddSubstract = id:Identificador _ op:("+="/"-=") _ exp:Expresion { return crearNodo('implicitaddsubstract', { id, op, exp }) }
-
-StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*)) _ iden:Identificador _ ";" _ { return { tipo, iden } })+ _ "}" _ ";" {
+StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ iden:Identificador _ ";" _ { return { tipo, iden } })+ _ "}" _ ";" {
   return crearNodo('structDecl', { id, attrs })
 }
 
@@ -90,7 +85,7 @@ Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ 
       return crearNodo('switch', { cond, listCases, defaultCase })
     }
     / "while" _ "(" _ cond:Expresion _ ")" _ stmt:Stmt { return crearNodo('while', { cond, stmt }) }
-    / "for" _ "(" _ init:(VarDcl1 / VarDcl) _ cond:Expresion _ ";" _ inc:(Asignacion / ImplicitAddSubstract) _ ")" _ stmt:Stmt {
+    / "for" _ "(" _ init:(VarDcl1 / VarDcl) _ cond:Expresion _ ";" _ inc:Asignacion _ ")" _ stmt:Stmt {
       return crearNodo('for', { init, cond, inc, stmt })
     }
     / "break" _ ";" { return crearNodo('break') }
@@ -116,8 +111,8 @@ Expresion
 // a.b() = 2
 
 Asignacion
-  = name:Identificador _ indexes:( _ "[" _ num:([0-9])+ _ "]" _ { return num; })+ _ "=" _ value:Expresion _ {
-      return crearNodo('asignacion', { id: name, asgn: value, indexes: indexes.map((elem) => Number(elem)) })
+  = ref:Reference2 _ op:("+="/"-="/"=" { return text() }) _ value:Expresion _ {
+      return crearNodo('asignacion', { ref, op, value })
   }
 
 /*
@@ -232,11 +227,10 @@ Multiplicacion = izq:Unaria expansion:(
 
 Unaria = op:("-" / "!") _ num:Unaria { return crearNodo('unaria', { op, exp: num }) }
 / Dato
+
+/*
 / Llamada
 
-
-// "a"()()
-// a.b().c().d.c.e
 Llamada = objetivoInicial:Identificador operaciones:(
     ("(" _ args:Argumentos? _ ")" { return {args, tipo: 'funcCall' } })
     / ("." _ id:Identificador _ { return { id, tipo: 'get' } })
@@ -260,6 +254,7 @@ Llamada = objetivoInicial:Identificador operaciones:(
 
 return op
 }
+*/
 
 // a()()
 // NODO-> callee: a, params: [] --- CALLEE1
@@ -278,8 +273,56 @@ Dato = [0-9]+"."[0-9]+ {return crearNodo('float', { valor: Number(text()) })}
   / text:null { return crearNodo('null', { valor: text })}
   / text:boolean { return crearNodo('boolean', { valor: text })}
   / text:char { return crearNodo('char', { valor: text })}
-  / id:Identificador _ "{" _ firstVal:(id2:Identificador _ ":" _ exp1:Expresion { return { id: id2, exp: exp1 } }) _ vals:( _ "," _ id3:Identificador _ ":" _ exp2:Expresion _ return { id: id3, exp: exp2 } )* _ "}" { vals.unshift(firstVal); return crearNodo('structData', { id, vals })}
-  / id:Identificador _ dimensions:( _ "[" _ num:([0-9])+ _ "]" _ { return num; })* { return crearNodo('referenciaVariable', { id, dimensions: dimensions.map((elem) => Number(elem)) }) }
+  / id:Identificador _ "{" _ firstVal:(id2:Identificador _ ":" _ exp1:Expresion { return { id: id2, exp: exp1 } }) _ vals:( _ "," _ id3:Identificador _ ":" _ exp2:Expresion _ { return { id: id3, exp: exp2 } } )* _ "}" { vals.unshift(firstVal); return crearNodo('structData', { id, vals })}
+  / ref:Reference { return crearNodo('referenciaVariable', { refData: ref }) }
+
+Reference
+  = head:Identificador tail:(PropertyAccess / ArrayAccess / FunctionCall)* {
+    return {
+      type: "Reference",
+      head: head,
+      tail: tail
+    };
+  }
+
+Reference2
+  = head:Identificador tail:(PropertyAccess / ArrayAccess )* {
+    return {
+      type: "Reference",
+      head: head,
+      tail: tail
+    };
+  }
+
+PropertyAccess
+  = "." property:Identificador {
+    return {
+      type: "PropertyAccess",
+      property
+    };
+  }
+
+ArrayAccess
+  = "[" index:Expresion "]" {
+    return {
+      type: "ArrayAccess",
+      index
+    };
+  }
+
+FunctionCall
+  = "(" args:ArgumentList? ")" {
+    return {
+      type: "FunctionCall",
+      arguments: args || []
+    };
+  }
+
+ArgumentList
+  = head:Expresion tail:("," Expresion)* {
+    return [head].concat(tail.map(function(item) { return item[1]; }));
+  }
+
 
 //  / "new" _ id:Identificador _ "(" _ args:Argumentos? _ ")" { return crearNodo('instancia', { id, args: args || [] }) }
   

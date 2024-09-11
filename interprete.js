@@ -7,10 +7,9 @@ import { embebidas } from "./embebidas.js";
 import { FuncionForanea } from "./foreanea.js";
 import { Clase } from "./clase.js";
 import { Instancia } from "./instancia.js";
-
+import lodashCloneDeep from "./lodash/cloneDeep.js"
 
 export class InterpreterVisitor extends BaseVisitor {
-
     constructor() {
         super();
         this.entornoActual = new Entorno();
@@ -186,8 +185,6 @@ export class InterpreterVisitor extends BaseVisitor {
       * @type {BaseVisitor['visitNewExp']}
       */
     visitNewExp(node) {
-        console.log(node.tipo)
-        console.log(generateMultidimensionalArray(node.dimensions, defaultValueByType(node.tipo)))
         return generateMultidimensionalArray(node.dimensions, defaultValueByType(node.tipo));
     }
 
@@ -205,7 +202,6 @@ export class InterpreterVisitor extends BaseVisitor {
             if (index === 0) {
                 if (typeElem === "NVector") {
                     typeVector = elem.tipo;
-                    node.dimension = node.dimension + 1;
                     hasVectors = true;
                 } else {
                     typeVector = typeElem;
@@ -223,7 +219,11 @@ export class InterpreterVisitor extends BaseVisitor {
                 }
             }
 
-            return proccesedValue;
+            return {
+                tipoSimbolo: getTipoSimboloByType(typeElem),
+                tipoVariable: typeVector,
+                valor: proccesedValue
+            };
         });
 
         node.tipo = typeVector;
@@ -252,7 +252,7 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitStructDecl(node) {
         if (!this.entornoActual.exists(node.id)) {
-            this.entornoActual.set(node.id, "struct", "struct", node.attrs);
+            this.entornoActual.set(node.id, "structDecl", "struct", node.attrs);
         }
     }
 
@@ -262,7 +262,7 @@ export class InterpreterVisitor extends BaseVisitor {
     visitNStruct(node) {
         let objectToReturn = {};
 
-        if (!this.entornoActual.exists(node.id) || this.entornoActual.get(node.id).tipoSimbolo !== "struct") throw new Error("Struct para modelar no existente");
+        if (!this.entornoActual.exists(node.id) || this.entornoActual.get(node.id).tipoSimbolo !== "structDecl") throw new Error("Struct para modelar no existente");
 
         const structure = this.entornoActual.get(node.id);
 
@@ -283,15 +283,24 @@ export class InterpreterVisitor extends BaseVisitor {
             } else {
                 let acceptedVal = node.vals[attrFoundIndex].exp.accept(this);
 
-                if (this.getTrueType(node.vals[attrFoundIndex].exp) !== elem.tipo) {
+                let typeSymbol = this.getTrueType(node.vals[attrFoundIndex].exp);
+
+                // Checar lo de los structs
+                if (node.vals[attrFoundIndex].exp.constructor.name === "NStruct") {
+                    this.visitNStruct(node.vals[attrFoundIndex].exp);
+
+                    if (exp.id !== elem.tipo) {
+                        throw new Error("Struct no cumple con la estrucutura del la estructura del Struct de " + node.id);
+                    }
+                } else if (this.getTrueType(node.vals[attrFoundIndex].exp) !== elem.tipo) {
                     throw new Error("Struct no cumple con la estrucutura del la estructura del Struct de " + node.id);
                 }
 
-                if (node.vals[attrFoundIndex].exp.constructor.name === "NStruct") {
-                    this.visitNStruct(node.vals[attrFoundIndex].exp);
-                }
-
-                objectToReturn[node.vals[attrFoundIndex].id] = acceptedVal;
+                objectToReturn[node.vals[attrFoundIndex].id] = {
+                    tipoSimbolo: getTipoSimboloByType(typeSymbol),
+                    tipoVariable: elem.tipo,
+                    valor: acceptedVal,
+                };
             }
         });
 
@@ -318,9 +327,14 @@ export class InterpreterVisitor extends BaseVisitor {
             if ((node.exp.constructor.name === "NewExp") || (node.exp.constructor.name === "NVector")) {
                 typeSymbol = "vector";
                 tipoValor = node.exp.tipo;
+            } else if (node.exp.constructor.name === "ReferenciaVariable") {
+                typeSymbol = node.exp.tipoSimbolo;
+                tipoValor = node.exp.tipoVariable;
             } else {
                 tipoValor = this.getTrueType(node.exp);
             }
+
+            console.log({tipoValor, tipoVariable})
 
             if (tipoValor === tipoVariable) {
                 this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable);
@@ -337,20 +351,45 @@ export class InterpreterVisitor extends BaseVisitor {
       * @type {BaseVisitor['visitReferenciaVariable']}
       */
     visitReferenciaVariable(node) {
-        const nombreVariable = node.id;
-        const valueFromTable = this.entornoActual.get(nombreVariable);
+        // Hacer el de las funciones
+        const { head, tail } = node.refData;
+        const headData = this.entornoActual.get(head);
 
-        if (valueFromTable.tipoSimbolo === "vector") {
-            if (node.dimensions.length > 0) {
-                return getValueByIndices(valueFromTable.valor, node.dimensions);
-            } else {
-                return valueFromTable.valor;
-            }
+        if (tail.length > 0) {
+            return tail.reduce((prev, currVal, currIdx) => {
+                if (currVal.type === "PropertyAccess") {
+                    if (prev[currVal.property] === undefined) {
+                        throw new Error("El valor referenciado no existe.");
+                    } else {
+                        return prev.valor[currVal.property].valor;
+                    }
+                } else if (currVal.type === "ArrayAccess") {
+                    if (prev.tipoSimbolo !== "vector") {
+                        throw new Error("El valor referenciado no es un array.");
+                    } else {
+                        if (this.getTrueType(currVal.index) === "int") {
+                            node.tipoSimbolo = prev.valor[Number(currVal.index.accept(this))].tipoSimbolo;
+                            node.tipoVariable = prev.valor[Number(currVal.index.accept(this))].tipoVariable;
+
+                            if (prev.valor[Number(currVal.index.accept(this))].tipoSimbolo === "vector") {
+                                lodashCloneDeep(headData.valor);
+                            } else {
+                                return prev.valor[Number(currVal.index.accept(this))].valor;
+                            }
+                        } else {
+                            throw new Error("El indice tiene que ser un entero");
+                        }
+                    }
+                }
+            }, headData);
         } else {
-            if (node.dimensions.length > 0) {
-                throw new Error("La variable no es un vector");
+            node.tipoSimbolo = headData.tipoSimbolo;
+            node.tipoVariable = headData.tipoVariable;
+
+            if (headData.tipoSimbolo === "vector") {
+                return lodashCloneDeep(headData.valor);
             } else {
-                return valueFromTable.valor;
+                return headData.valor;
             }
         }
     }
@@ -368,8 +407,7 @@ export class InterpreterVisitor extends BaseVisitor {
             }
 
             let tempString = "";
-
-            tempString += node.exp[i].accept(this);
+            tempString += elem.accept(this);
 
             tempString = tempString
                 .replace("\\n", "\n")
@@ -395,55 +433,52 @@ export class InterpreterVisitor extends BaseVisitor {
      * @type {BaseVisitor['visitAsignacion']}
      */
     visitAsignacion(node) {
-        // const valor = this.interpretar(node.asgn);
-        const valor = node.asgn.accept(this);
-        const tipoValor = this.getTrueType(node.asgn);
-        const valueFromTable = this.entornoActual.get(node.id);
+        const { head, tail } = node.ref;
+        const headData = this.entornoActual.get(head);
 
-        // TODO: Ver si se puede asignar vectores a vectores
-        if (tipoValor !== valueFromTable.tipoVariable) {
-            throw new Error("Tipos no coinciden")
+        let whereToSave;
+        const acceptedVal = node.value.accept(this);
+
+        if (tail.length > 0) {
+            whereToSave = tail.reduce((prev, currVal, currIdx) => {
+                if (currVal.type === "PropertyAccess") {
+                    if (prev[currVal.property] === undefined) {
+                        throw new Error("El valor referenciado no existe.")
+                    } else {
+                        return prev.valor[currVal.property];
+                    }
+                } else if (currVal.type === "ArrayAccess") {
+                    if (prev.tipoSimbolo !== "vector") {
+                        throw new Error("El valor referenciado no es un array.")
+                    } else {
+                        return prev.valor[currVal.index.accept(this)];
+                    }
+                }
+            }, headData);
+        } else {
+            whereToSave = headData;
         }
 
-        if (valueFromTable.tipoSimbolo === "vector") {
-            if (node.indexes.length > 0) {
-                this.entornoActual.assignVector(node.id, node.indexes, valor);
-            }
-        } else {
-            if (node.indexes.length > 0) {
-                throw new Error("La variable no es un vector");
+        if (whereToSave.tipoSimbolo === "simple") {
+            if (this.getTrueType(node.value) === whereToSave.tipoVariable) {
+                if (node.op === "=") {
+                    whereToSave.valor = acceptedVal;
+                } else {
+                    if (whereToSave.tipoVariable === "float" || whereToSave.tipoVariable === "int" || whereToSave.tipoVariable === "string") {
+                        if (node.op === "+=") {
+                            whereToSave.valor = whereToSave.valor + acceptedVal;
+                        } else {
+                            whereToSave.valor = whereToSave.valor - acceptedVal;
+                        }
+                    } else {
+                        throw new Error("Para += o -=, tipos incorrectos");
+                    }
+                }
             } else {
-                this.entornoActual.assign(node.id, valor);
+                throw new Error("Para Asignacion, tipos incorrectos");
             }
-        }
-
-        return valor;
-
-        /*
-        this.entornoActual.assign(node.id, {
-                tipo: tipoValor,
-                valor
-            });
-            return valor;
-        */
-    }
-
-    /**
-     * @type {BaseVisitor['visitImplicitAddSubstract']}
-     */
-    visitImplicitAddSubstract(node) {
-        const valor = node.exp.accept(this);
-        const tipoValor = this.getTrueType(node.exp);
-
-        if (this.entornoActual.get(node.id).tipo === "int" || this.entornoActual.get(node.id).tipo === "float" || this.entornoActual.get(node.id).tipo === "string") {
-            this.entornoActual.assign(node.id, {
-                tipo: tipoValor,
-                valor: node.op === "+=" ? this.entornoActual.get(node.id).valor + valor : this.entornoActual.get(node.id).valor - valor
-            });
-
-            return valor;
         } else {
-            throw new Error("Solo se puede hacer operación implícita con tipo 'int' o 'float'");
+            console.log("Aún no sé que hacer aquí xd")
         }
     }
 
@@ -726,9 +761,7 @@ export class InterpreterVisitor extends BaseVisitor {
         ) {
             return node.tipo;
         } else if (node.constructor.name === "ReferenciaVariable") {
-            return this.entornoActual.get(node.id).tipoVariable
-        } else if (node.constructor.name === "NStruct") {
-            return node.id;
+            return this.entornoActual.get(node.refData.head).tipoVariable
         } else {
             return getNativeType(node.constructor.name);
         }
@@ -751,6 +784,10 @@ function getNativeType(name) {
             return "char";
         case "NVector":
             return "vector";
+        case "NStruct":
+            return "struct";
+        case "NewExp":
+            return "struct";
     }
 }
 
@@ -903,6 +940,7 @@ function generateMultidimensionalArray(dimensions, toFill) {
     return createArray(dimensions);
 }
 
+/*
 function getValueByIndices(array, indices) {
     let current = array;
     for (let i = 0; i < indices.length; i++) {
@@ -916,19 +954,49 @@ function getValueByIndices(array, indices) {
     }
     return current;
 }
+*/
 
 function defaultValueByType(type) {
     //(//"char"/"int"/"float")
     switch (type) {
         case "string":
-            return "";
+            return {
+                tipoSimbolo: "simple",
+                tipoVariable: "string",
+                valor: "",
+            }
         case "boolean":
-            return false;
+            return {
+                tipoSimbolo: "simple",
+                tipoVariable: "boolean",
+                valor: "false",
+            }
         case "char":
-            return "\u0000";
+            return {
+                tipoSimbolo: "simple",
+                tipoVariable: "boolean",
+                valor: "\u0000",
+            }
         case "int":
+            return {
+                tipoSimbolo: "simple",
+                tipoVariable: "int",
+                valor: 0,
+            }
         case "float":
-            return 0;
+            return {
+                tipoSimbolo: "simple",
+                tipoVariable: "float",
+                valor: 0,
+            }
+    }
+}
+
+function getTipoSimboloByType(type) {
+    if (reservedWords.includes(type)) {
+        return "simple";
+    } else {
+        return type;
     }
 }
 

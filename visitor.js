@@ -37,8 +37,6 @@
 
  * @typedef {import('./nodos').Ternario} Ternario
 
- * @typedef {import('./nodos').ImplicitAddSubstract} ImplicitAddSubstract
-
  * @typedef {import('./nodos').NewExp} NewExp
 
 
@@ -244,16 +242,6 @@ export class BaseVisitor {
     visitPrint(node) {
         throw new Error('Metodo visitPrint no implementado');
     }
-
-
-    /**
-     * @param {ImplicitAddSubstract} node
-     * @returns {any}
-     */
-    visitImplicitAddSubstract(node) {
-        throw new Error('Metodo visitImplicitAddSubstract no implementado');
-    }
-
 
     /**
      * @param {ExpresionStmt} node

@@ -1,6 +1,8 @@
 
 /**
  * @typedef {Object} Location
+ * @typedef {import('./astTypes').Reference} Reference
+ * @typedef {import('./astTypes').Reference2} Reference2
  * @property {Object} start
  * @property {number} start.offset
  * @property {number} start.line
@@ -10,21 +12,21 @@
  * @property {number} end.line
  * @property {number} end.column
 */
-    
+
 
 /**
  * @typedef {import('./visitor').BaseVisitor} BaseVisitor
  */
 
-export class Expresion  {
+export class Expresion {
 
     /**
     * @param {Object} options
     * @param {Location|null} options.location Ubicacion del nodo en el codigo fuente
     */
     constructor() {
-        
-        
+
+
         /**
          * Ubicacion del nodo en el codigo fuente
          * @type {Location|null}
@@ -40,7 +42,7 @@ export class Expresion  {
         return visitor.visitExpresion(this);
     }
 }
-    
+
 export class OperacionBinaria extends Expresion {
 
     /**
@@ -50,10 +52,10 @@ export class OperacionBinaria extends Expresion {
     * @param {string} options.op Operador de la operacion
     * @param {string} options
     */
-   
+
     constructor({ izq, der, op }) {
         super();
-        
+
         /**
          * Expresion izquierda de la operacion
          * @type {Expresion}
@@ -84,7 +86,7 @@ export class OperacionBinaria extends Expresion {
         return visitor.visitOperacionBinaria(this);
     }
 }
-    
+
 export class OperacionUnaria extends Expresion {
 
     /**
@@ -95,7 +97,7 @@ export class OperacionUnaria extends Expresion {
     */
     constructor({ exp, op }) {
         super();
-        
+
         /**
          * Expresion de la operacion
          * @type {Expresion}
@@ -132,7 +134,7 @@ export class Ternario extends Expresion {
     */
     constructor({ condition, trueExpr, falseExpr }) {
         super();
-        
+
         /**
          * Condicion de la operacion
          * @type {Expresion}
@@ -165,7 +167,7 @@ export class Ternario extends Expresion {
         return visitor.visitTernario(this);
     }
 }
-    
+
 export class Agrupacion extends Expresion {
 
     /**
@@ -174,7 +176,7 @@ export class Agrupacion extends Expresion {
     */
     constructor({ exp }) {
         super();
-        
+
         /**
          * Expresion agrupada
          * @type {Expresion}
@@ -200,7 +202,7 @@ export class NString extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {string}
         */
@@ -224,7 +226,7 @@ export class NBoolean extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {boolean}
         */
@@ -248,7 +250,7 @@ export class NVector extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {Expresion[]}
         */
@@ -281,7 +283,7 @@ export class NNull extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {any}
         */
@@ -305,7 +307,7 @@ export class NChar extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {string}
         */
@@ -329,7 +331,7 @@ export class NInt extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {number}
         */
@@ -353,7 +355,7 @@ export class NFloat extends Expresion {
     */
     constructor({ valor }) {
         super();
-        
+
         /**
          * @type {number}
         */
@@ -378,7 +380,7 @@ export class NStruct extends Expresion {
     */
     constructor({ id, vals }) {
         super();
-        
+
         /**
          * @type {string}
         */
@@ -410,7 +412,7 @@ export class NewExp extends Expresion {
     */
     constructor({ type, dimensions, level }) {
         super();
-        
+
         /**
          * @type {string}
         */
@@ -433,7 +435,7 @@ export class NewExp extends Expresion {
     accept(visitor) {
         return visitor.visitNewExp(this);
     }
-}   
+}
 
 export class DeclaracionVariable1 extends Expresion {
 
@@ -445,7 +447,7 @@ export class DeclaracionVariable1 extends Expresion {
     */
     constructor({ type, id, numBrackets, exp }) {
         super();
-        
+
         /**
          * Identificador de la variable
          * @type {string}
@@ -490,7 +492,7 @@ export class DeclaracionVariable extends Expresion {
     */
     constructor({ id, exp }) {
         super();
-        
+
         /**
          * Identificador de la variable
          * @type {string}
@@ -523,7 +525,7 @@ export class StructDecl extends Expresion {
     */
     constructor({ id, attrs }) {
         super();
-        
+
         /**
          * Identificador de la variable
          * @type {string}
@@ -546,28 +548,34 @@ export class StructDecl extends Expresion {
         return visitor.visitStructDecl(this);
     }
 }
-    
+
 export class ReferenciaVariable extends Expresion {
 
+    // Importar los tipos
     /**
     * @param {Object} options
-    * @param {string} options.id Identificador de la variable
-    * @param {number[]} options.dimensions Dimensiones e indices
+    * @param {Reference} options.refData Datos de la referencia
     */
-    constructor({ id, dimensions }) {
+    constructor({ refData }) {
         super();
-        
-        /**
-         * Identificador de la variable
-         * @type {string}
-        */
-        this.id = id;
 
         /**
-         * Dimensiones e indices
-         * @type {number[]}
+         * 
+         * @type {string|null}
+         */
+        this.tipoSimbolo = null;
+
+        /**
+         * 
+         * @type {string|null}
+         */
+        this.tipoVariable = null;
+
+        /**
+         * Datos de la referencia
+         * @type {Reference}
         */
-        this.dimensions = dimensions;
+        this.refData = refData;
     }
 
     /**
@@ -577,7 +585,7 @@ export class ReferenciaVariable extends Expresion {
         return visitor.visitReferenciaVariable(this);
     }
 }
-    
+
 export class Print extends Expresion {
 
     /**
@@ -586,7 +594,7 @@ export class Print extends Expresion {
     */
     constructor({ exp }) {
         super();
-        
+
         /**
          * Expresion a imprimir
          * @type {Expresion}
@@ -602,7 +610,7 @@ export class Print extends Expresion {
         return visitor.visitPrint(this);
     }
 }
-    
+
 export class ExpresionStmt extends Expresion {
 
     /**
@@ -611,7 +619,7 @@ export class ExpresionStmt extends Expresion {
     */
     constructor({ exp }) {
         super();
-        
+
         /**
          * Expresion a evaluar
          * @type {Expresion}
@@ -628,22 +636,23 @@ export class ExpresionStmt extends Expresion {
     }
 }
 
-export class ImplicitAddSubstract extends Expresion {
+export class Asignacion extends Expresion {
 
     /**
     * @param {Object} options
-    * @param {string} options.id variable
+    * @param {Reference2} options.ref Identificador de la variable
     * @param {string} options.op Operador
-    * @param {Expresion} options.exp Expresion a asignar
+    * @param {Expresion} options.value Expresion a asignar
     */
-    constructor({ id, op, exp }) {
+    constructor({ ref, op, value }) {
         super();
-        
+
         /**
          * Identificador de la variable
-         * @type {string}
+         * @type {Reference2}
         */
-        this.id = id;
+        this.ref = ref;
+
 
         /**
          * Operador
@@ -655,47 +664,7 @@ export class ImplicitAddSubstract extends Expresion {
          * Expresion a asignar
          * @type {Expresion}
         */
-        this.exp = exp;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitImplicitAddSubstract(this);
-    }
-}
-    
-export class Asignacion extends Expresion {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.id Identificador de la variable
-    * @param {Expresion} options.asgn Expresion a asignar
-    * @param {number[]} options.indexes Indexes si es array/vector
-    */
-    constructor({ id, asgn, indexes }) {
-        super();
-        
-        /**
-         * Identificador de la variable
-         * @type {string}
-        */
-        this.id = id;
-
-
-        /**
-         * Expresion a asignar
-         * @type {Expresion}
-        */
-        this.asgn = asgn;
-
-        /**
-         * Indexes si es array/vector
-         * @type {number[]}
-        */
-        this.indexes = indexes;
+        this.value = value;
 
     }
 
@@ -706,7 +675,7 @@ export class Asignacion extends Expresion {
         return visitor.visitAsignacion(this);
     }
 }
-    
+
 export class Bloque extends Expresion {
 
     /**
@@ -715,7 +684,7 @@ export class Bloque extends Expresion {
     */
     constructor({ dcls }) {
         super();
-        
+
         /**
          * Sentencias del bloque
          * @type {Expresion[]}
@@ -731,7 +700,7 @@ export class Bloque extends Expresion {
         return visitor.visitBloque(this);
     }
 }
-    
+
 export class If extends Expresion {
 
     /**
@@ -742,7 +711,7 @@ export class If extends Expresion {
     */
     constructor({ cond, stmtTrue, stmtFalse }) {
         super();
-        
+
         /**
          * Condicion del if
          * @type {Expresion}
@@ -783,7 +752,7 @@ export class Switch extends Expresion {
     */
     constructor({ cond, listCases, defaultCase }) {
         super();
-        
+
         /**
          * @type {Expresion}
         */
@@ -810,7 +779,7 @@ export class Switch extends Expresion {
         return visitor.visitSwitch(this);
     }
 }
-    
+
 export class While extends Expresion {
 
     /**
@@ -820,7 +789,7 @@ export class While extends Expresion {
     */
     constructor({ cond, stmt }) {
         super();
-        
+
         /**
          * Condicion del while
          * @type {Expresion}
@@ -843,7 +812,7 @@ export class While extends Expresion {
         return visitor.visitWhile(this);
     }
 }
-    
+
 export class For extends Expresion {
 
     /**
@@ -855,7 +824,7 @@ export class For extends Expresion {
     */
     constructor({ init, cond, inc, stmt }) {
         super();
-        
+
         /**
          * Inicializacion del for
          * @type {Expresion}
@@ -892,7 +861,7 @@ export class For extends Expresion {
         return visitor.visitFor(this);
     }
 }
-    
+
 export class Break extends Expresion {
 
     /**
@@ -901,7 +870,7 @@ export class Break extends Expresion {
     */
     constructor() {
         super();
-        
+
     }
 
     /**
@@ -911,7 +880,7 @@ export class Break extends Expresion {
         return visitor.visitBreak(this);
     }
 }
-    
+
 export class Continue extends Expresion {
 
     /**
@@ -920,7 +889,7 @@ export class Continue extends Expresion {
     */
     constructor() {
         super();
-        
+
     }
 
     /**
@@ -930,7 +899,7 @@ export class Continue extends Expresion {
         return visitor.visitContinue(this);
     }
 }
-    
+
 export class Return extends Expresion {
 
     /**
@@ -939,7 +908,7 @@ export class Return extends Expresion {
     */
     constructor({ exp }) {
         super();
-        
+
         /**
          * Expresion a retornar
          * @type {Expresion|undefined}
@@ -955,7 +924,7 @@ export class Return extends Expresion {
         return visitor.visitReturn(this);
     }
 }
-    
+
 export class Llamada extends Expresion {
 
     /**
@@ -965,7 +934,7 @@ export class Llamada extends Expresion {
     */
     constructor({ callee, args }) {
         super();
-        
+
         /**
          * Expresion a llamar
          * @type {Expresion}
@@ -988,7 +957,7 @@ export class Llamada extends Expresion {
         return visitor.visitLlamada(this);
     }
 }
-    
+
 export class FuncDcl extends Expresion {
 
     /**
@@ -999,7 +968,7 @@ export class FuncDcl extends Expresion {
     */
     constructor({ id, params, bloque }) {
         super();
-        
+
         /**
          * Identificador de la funcion
          * @type {string}
@@ -1029,7 +998,7 @@ export class FuncDcl extends Expresion {
         return visitor.visitFuncDcl(this);
     }
 }
-    
+
 export class ClassDcl extends Expresion {
 
     /**
@@ -1039,7 +1008,7 @@ export class ClassDcl extends Expresion {
     */
     constructor({ id, dcls }) {
         super();
-        
+
         /**
          * Identificador de la clase
          * @type {string}
@@ -1062,7 +1031,7 @@ export class ClassDcl extends Expresion {
         return visitor.visitClassDcl(this);
     }
 }
-    
+
 export class Instancia extends Expresion {
 
     /**
@@ -1072,7 +1041,7 @@ export class Instancia extends Expresion {
     */
     constructor({ id, args }) {
         super();
-        
+
         /**
          * Identificador de la clase
          * @type {string}
@@ -1095,7 +1064,7 @@ export class Instancia extends Expresion {
         return visitor.visitInstancia(this);
     }
 }
-    
+
 export class Get extends Expresion {
 
     /**
@@ -1105,7 +1074,7 @@ export class Get extends Expresion {
     */
     constructor({ objetivo, propiedad }) {
         super();
-        
+
         /**
          * Objeto de la propiedad
          * @type {Expresion}
@@ -1128,7 +1097,7 @@ export class Get extends Expresion {
         return visitor.visitGet(this);
     }
 }
-    
+
 export class Set extends Expresion {
 
     /**
@@ -1139,7 +1108,7 @@ export class Set extends Expresion {
     */
     constructor({ objetivo, propiedad, valor }) {
         super();
-        
+
         /**
          * Objeto de la propiedad
          * @type {Expresion}
@@ -1169,5 +1138,6 @@ export class Set extends Expresion {
         return visitor.visitSet(this);
     }
 }
-    
-export default { NChar, NStruct ,StructDecl, NVector, NewExp, ImplicitAddSubstract, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+
+export default { NChar, NStruct, StructDecl, NVector, NewExp, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+
