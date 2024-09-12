@@ -264,7 +264,6 @@ export class NVector extends Expresion {
         /**
          * @type {number}
         */
-        this.dimension = 1;
     }
 
     /**

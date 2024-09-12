@@ -1,8 +1,33 @@
-let originalArray = [1, 2, 3];
-let copiedArray = [...originalArray];
+function generateMultidimensionalArray(dimensions) {
+  if (dimensions.length === 0) {
+    return {
+      tipoSimbolo: "simple",
+      tipoVariable: "numero",
+      valor: 0
+    };
+  }
 
-// Cambiar el nuevo array no afecta al original
-copiedArray[0] = 10;
+  function createArray(dims) {
+    if (dims.length === 1) {
+      return {
+        tipoSimbolo: "vector",
+        tipoVariable: "numero",
+        valor: Array(dims[0]).fill().map(() => ({
+          tipoSimbolo: "simple",
+          tipoVariable: "numero",
+          valor: 0
+        }))
+      };
+    }
+    return {
+      tipoSimbolo: "vector",
+      tipoVariable: "numero",
+      valor: Array(dims[0]).fill().map(() => createArray(dims.slice(1)))
+    };
+  }
 
-console.log(originalArray); // [1, 2, 3]
-console.log(copiedArray);   // [10, 2, 3]
+  return createArray(dimensions);
+}
+
+// Ejemplo de uso:
+console.log(JSON.stringify(generateMultidimensionalArray([2, 2]), null, 2));

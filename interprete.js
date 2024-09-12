@@ -185,7 +185,7 @@ export class InterpreterVisitor extends BaseVisitor {
       * @type {BaseVisitor['visitNewExp']}
       */
     visitNewExp(node) {
-        return generateMultidimensionalArray(node.dimensions, defaultValueByType(node.tipo));
+        return generateMultidimensionalArray(node.dimensions, defaultValueByType(node.tipo)).valor;
     }
 
     /**
@@ -200,15 +200,17 @@ export class InterpreterVisitor extends BaseVisitor {
             let typeElem = this.getTrueType(elem);
 
             if (index === 0) {
-                if (typeElem === "NVector") {
+                if (typeElem === "vector") {
+                    // console.log({part: "A", typeElem, elemTipo: elem.tipo});
                     typeVector = elem.tipo;
                     hasVectors = true;
                 } else {
+                    // console.log({part:"B", typeElem, elemTipo: elem.tipo});
                     typeVector = typeElem;
                 }
 
             } else {
-                if (typeElem === "NVector") {
+                if (typeElem === "vector") {
                     if ((hasVectors === false) || (typeVector !== elem.tipo)) {
                         throw new Error("Los valores del vector no son del mismo tipo")
                     }
@@ -325,16 +327,35 @@ export class InterpreterVisitor extends BaseVisitor {
             let tipoValor = "";
 
             if ((node.exp.constructor.name === "NewExp") || (node.exp.constructor.name === "NVector")) {
+                let dimensionCounter = 0;
                 typeSymbol = "vector";
                 tipoValor = node.exp.tipo;
+
+                // Método: checar:
+                // 1. Misma dimension
+                // 2. Mismo tipo
+
+                // console.log(valorVariable)
+                function recFindLastNonVector(nod) {
+                    if (nod.valor[0] !== undefined && nod.valor[0].tipoSimbolo === "vector") {
+                        dimensionCounter++;
+                        recFindLastNonVector(nod.valor[0]);
+                    }
+                }
+
+                recFindLastNonVector({ valor: [{ valor: valorVariable, tipoSimbolo: "vector" }] });
+
+                // console.log({ dimensionCounter })
+
+                if (node.numBrackets !== dimensionCounter) {
+                    throw new Error("El array a asignar, no tiene la misma dimensión (n) que el que se especifica en el tipo");
+                }
             } else if (node.exp.constructor.name === "ReferenciaVariable") {
                 typeSymbol = node.exp.tipoSimbolo;
                 tipoValor = node.exp.tipoVariable;
             } else {
                 tipoValor = this.getTrueType(node.exp);
             }
-
-            console.log({tipoValor, tipoVariable})
 
             if (tipoValor === tipoVariable) {
                 this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable);
@@ -357,6 +378,8 @@ export class InterpreterVisitor extends BaseVisitor {
 
         if (tail.length > 0) {
             return tail.reduce((prev, currVal, currIdx) => {
+
+                console.log({prev})
                 if (currVal.type === "PropertyAccess") {
                     if (prev[currVal.property] === undefined) {
                         throw new Error("El valor referenciado no existe.");
@@ -368,13 +391,15 @@ export class InterpreterVisitor extends BaseVisitor {
                         throw new Error("El valor referenciado no es un array.");
                     } else {
                         if (this.getTrueType(currVal.index) === "int") {
-                            node.tipoSimbolo = prev.valor[Number(currVal.index.accept(this))].tipoSimbolo;
-                            node.tipoVariable = prev.valor[Number(currVal.index.accept(this))].tipoVariable;
+                            let acceptedIndex = Number(currVal.index.accept(this));
 
-                            if (prev.valor[Number(currVal.index.accept(this))].tipoSimbolo === "vector") {
-                                lodashCloneDeep(headData.valor);
+                            node.tipoSimbolo = prev.valor[acceptedIndex].tipoSimbolo;
+                            node.tipoVariable = prev.valor[acceptedIndex].tipoVariable;
+
+                            if (prev.valor[acceptedIndex].tipoSimbolo === "vector") {
+                                return lodashCloneDeep(prev.valor)[acceptedIndex];
                             } else {
-                                return prev.valor[Number(currVal.index.accept(this))].valor;
+                                return prev.valor[acceptedIndex].valor;
                             }
                         } else {
                             throw new Error("El indice tiene que ser un entero");
@@ -927,19 +952,34 @@ function getBinOpType(typeA, typeB, op) {
 
 function generateMultidimensionalArray(dimensions, toFill) {
     if (dimensions.length === 0) {
-        return 0;
+        return {
+            tipoSimbolo: toFill.tipoSimbolo,
+            tipoVariable: toFill.tipoVariable,
+            valor: toFill.valor
+        };
     }
 
     function createArray(dims) {
         if (dims.length === 1) {
-            return new Array(dims[0]).fill(toFill);
+            return {
+                tipoSimbolo: "vector",
+                tipoVariable: toFill.tipoVariable,
+                valor: Array(dims[0]).fill().map(() => ({
+                    tipoSimbolo: toFill.tipoSimbolo,
+                    tipoVariable: toFill.tipoVariable,
+                    valor: toFill.valor
+                }))
+            };
         }
-        return new Array(dims[0]).fill().map(() => createArray(dims.slice(1)));
+        return {
+            tipoSimbolo: "vector",
+            tipoVariable: toFill.tipoVariable,
+            valor: Array(dims[0]).fill().map(() => createArray(dims.slice(1)))
+        };
     }
 
     return createArray(dimensions);
 }
-
 /*
 function getValueByIndices(array, indices) {
     let current = array;
