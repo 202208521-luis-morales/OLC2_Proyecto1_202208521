@@ -378,14 +378,27 @@ export class InterpreterVisitor extends BaseVisitor {
 
         if (tail.length > 0) {
             return tail.reduce((prev, currVal, currIdx) => {
+                let hadToFinish = false;
 
-                console.log({prev})
                 if (currVal.type === "PropertyAccess") {
+                    if (currVal.property === "length") {
+                        if (prev.tipoSimbolo !== "vector") {
+                            throw new Error("El valor referenciado no es un array.");
+                        } else {
+                            return prev.valor.length;
+                        }
+                    } else {
+                        // Dado que los structs no guardan funciones, se puede hacer esto
+                        return { type: currVal.type, property: currVal.property, prevVal: prev }
+                    }
+
+                    /*
                     if (prev[currVal.property] === undefined) {
                         throw new Error("El valor referenciado no existe.");
                     } else {
                         return prev.valor[currVal.property].valor;
                     }
+                        */
                 } else if (currVal.type === "ArrayAccess") {
                     if (prev.tipoSimbolo !== "vector") {
                         throw new Error("El valor referenciado no es un array.");
@@ -403,6 +416,29 @@ export class InterpreterVisitor extends BaseVisitor {
                             }
                         } else {
                             throw new Error("El indice tiene que ser un entero");
+                        }
+                    }
+                } else if (currVal.type === "FunctionCall") {
+                    console.log({prev});
+                    if (prev.type && prev.type === "PropertyAccess") {
+                        if (prev.property === "indexOf") {
+                            if (prev.prevVal.tipoSimbolo !== "vector") throw new Error("indexOf solo se puede usar en arrays");
+
+                            if ((currVal.arguments.length === 1) && (this.getTrueType(currVal.arguments[0]) === "int")) {
+                                const acceptedVal = currVal.arguments[0].accept(this);
+
+                                return prev.prevVal.valor.map((elem) => elem.valor).indexOf(acceptedVal);
+                            } else {
+                                throw new Error("Se esperaba 1 parámetro entero")
+                            }
+                        } else if (prev.property === "join") {
+                            if (prev.prevVal.tipoSimbolo !== "vector") throw new Error("join solo se puede usar en arrays");
+
+                            if (currVal.arguments.length === 0) {
+                                return prev.prevVal.valor.map((elem) => elem.valor).join();
+                            } else {
+                                throw new Error("Se esperaba 0 parámetros");
+                            }
                         }
                     }
                 }
