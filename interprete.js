@@ -245,8 +245,18 @@ export class InterpreterVisitor extends BaseVisitor {
 
         const valorVariable = node.exp.accept(this);
         const tipoVariable = this.getTrueType(node.exp);
+        let tipoSimbolo;
 
-        this.entornoActual.set(nombreVariable, "simple", tipoVariable, valorVariable);
+        switch (node.exp.constructor.name) {
+            case "NStruct":
+                tipoSimbolo = "structData"
+                break;
+            default:
+                tipoSimbolo = "simple"
+                break;
+        }
+
+        this.entornoActual.set(nombreVariable, tipoSimbolo, tipoVariable, valorVariable);
     }
 
     /**
@@ -268,7 +278,8 @@ export class InterpreterVisitor extends BaseVisitor {
 
         const structure = this.entornoActual.get(node.id);
 
-        structure.forEach((elem) => {
+        //console.log({node, structure})
+        structure.valor.forEach((elem) => {
             let attrFoundIndex = -1;
 
             // Método: Buscar si existe el elemento en node.vals
@@ -288,13 +299,19 @@ export class InterpreterVisitor extends BaseVisitor {
                 let typeSymbol = this.getTrueType(node.vals[attrFoundIndex].exp);
 
                 // Checar lo de los structs
+                /*
                 if (node.vals[attrFoundIndex].exp.constructor.name === "NStruct") {
                     this.visitNStruct(node.vals[attrFoundIndex].exp);
 
-                    if (exp.id !== elem.tipo) {
+                    console.log({nodeId: node.id, elemTipo: elem.tipo});
+                    if (node.id !== elem.tipo) {
                         throw new Error("Struct no cumple con la estrucutura del la estructura del Struct de " + node.id);
                     }
-                } else if (this.getTrueType(node.vals[attrFoundIndex].exp) !== elem.tipo) {
+                } else 
+                 */
+
+
+                if (this.getTrueType(node.vals[attrFoundIndex].exp) !== elem.tipo) {
                     throw new Error("Struct no cumple con la estrucutura del la estructura del Struct de " + node.id);
                 }
 
@@ -353,6 +370,9 @@ export class InterpreterVisitor extends BaseVisitor {
             } else if (node.exp.constructor.name === "ReferenciaVariable") {
                 typeSymbol = node.exp.tipoSimbolo;
                 tipoValor = node.exp.tipoVariable;
+            } else if (!reservedWords.includes(tipoVariable)) {
+                typeSymbol = "structData";
+                tipoValor = this.getTrueType(node.exp);
             } else {
                 tipoValor = this.getTrueType(node.exp);
             }
@@ -374,21 +394,36 @@ export class InterpreterVisitor extends BaseVisitor {
     visitReferenciaVariable(node) {
         // Hacer el de las funciones
         const { head, tail } = node.refData;
-        const headData = this.entornoActual.get(head);
+        let headData;
+
+        if (head !== "Object") headData = this.entornoActual.get(head);
 
         if (tail.length > 0) {
-            return tail.reduce((prev, currVal, currIdx) => {
+            let toReturn = tail.reduce((prev, currVal, currIdx) => {
                 let hadToFinish = false;
 
                 if (currVal.type === "PropertyAccess") {
                     if (currVal.property === "length") {
-                        if (prev.tipoSimbolo !== "vector") {
+                        if (prev.prevVal.tipoSimbolo !== "vector") {
                             throw new Error("El valor referenciado no es un array.");
                         } else {
-                            return prev.valor.length;
+                            return prev.prevVal.valor.length;
+                        }
+                    } else if (head === "Object") {
+                        if ((currIdx === 0) && (currVal.property === "keys")) {
+                            return { type: currVal.type, property: currVal.property, prevVal: null };
+                        } else {
+                            throw new Error("Object solo se puede utilizar con keys");
+                        }
+                    } if (prev.prevVal.tipoSimbolo === "structData") {
+                        if (prev.prevVal.valor[currVal.property] === undefined) {
+                            throw new Error("El valor referenciado no existe.");
+                        } else {
+                            return { type: currVal.type, property: currVal.property, prevVal: prev.prevVal.valor[currVal.property] };
+                            //return prev.prevVal.valor[currVal.property].valor;
                         }
                     } else {
-                        // Dado que los structs no guardan funciones, se puede hacer esto
+                        // Dado que los structs y arrays no guardan funciones, se puede hacer esto
                         return { type: currVal.type, property: currVal.property, prevVal: prev }
                     }
 
@@ -398,7 +433,7 @@ export class InterpreterVisitor extends BaseVisitor {
                     } else {
                         return prev.valor[currVal.property].valor;
                     }
-                        */
+                    */
                 } else if (currVal.type === "ArrayAccess") {
                     if (prev.tipoSimbolo !== "vector") {
                         throw new Error("El valor referenciado no es un array.");
@@ -419,8 +454,23 @@ export class InterpreterVisitor extends BaseVisitor {
                         }
                     }
                 } else if (currVal.type === "FunctionCall") {
-                    console.log({prev});
-                    if (prev.type && prev.type === "PropertyAccess") {
+                    if ((head === "Object") && (currIdx === 1) && (prev.type === "PropertyAccess") && (prev.property === "keys")) {
+                        if ((currVal.arguments.length === 1) && (getTipoSimboloByType(this.getTrueType(currVal.arguments[0]) === "struct"))) {
+                            //const acceptedVal = currVal.arguments[0].accept(this);
+                            const structType = this.getTrueType(currVal.arguments[0]);
+                            const structDeclFromTable = this.entornoActual.get(structType);
+
+                            return {
+                                type: currVal.type, property: currVal.property, prevVal: {
+                                    tipoSimbolo: "vector",
+                                    tipoVariable: "string",
+                                    valor: structDeclFromTable.valor.map((elem) => elem.iden)
+                                }
+                            };
+                        } else {
+                            throw new Error("Se esperaba 1 parámetro struct")
+                        }
+                    } else if (prev.type && prev.type === "PropertyAccess") {
                         if (prev.property === "indexOf") {
                             if (prev.prevVal.tipoSimbolo !== "vector") throw new Error("indexOf solo se puede usar en arrays");
 
@@ -442,7 +492,11 @@ export class InterpreterVisitor extends BaseVisitor {
                         }
                     }
                 }
-            }, headData);
+            }, { type: "PropertyAccess", property: head, prevVal: headData });
+
+            node.tipoSimbolo = toReturn.prevVal.tipoSimbolo;
+            node.tipoVariable = toReturn.prevVal.tipoVariable;
+            return toReturn.prevVal.valor;
         } else {
             node.tipoSimbolo = headData.tipoSimbolo;
             node.tipoVariable = headData.tipoVariable;
@@ -503,7 +557,7 @@ export class InterpreterVisitor extends BaseVisitor {
         if (tail.length > 0) {
             whereToSave = tail.reduce((prev, currVal, currIdx) => {
                 if (currVal.type === "PropertyAccess") {
-                    if (prev[currVal.property] === undefined) {
+                    if (prev.valor[currVal.property] === undefined) {
                         throw new Error("El valor referenciado no existe.")
                     } else {
                         return prev.valor[currVal.property];
@@ -512,7 +566,11 @@ export class InterpreterVisitor extends BaseVisitor {
                     if (prev.tipoSimbolo !== "vector") {
                         throw new Error("El valor referenciado no es un array.")
                     } else {
-                        return prev.valor[currVal.index.accept(this)];
+                        if (this.getTrueType(currVal.index) === "int") {
+                            return prev.valor[currVal.index.accept(this)];
+                        } else {
+                            throw new Error("El indice tiene que ser un entero");
+                        }
                     }
                 }
             }, headData);
@@ -823,6 +881,8 @@ export class InterpreterVisitor extends BaseVisitor {
             return node.tipo;
         } else if (node.constructor.name === "ReferenciaVariable") {
             return this.entornoActual.get(node.refData.head).tipoVariable
+        } else if (node.constructor.name === "NStruct") {
+            return node.id
         } else {
             return getNativeType(node.constructor.name);
         }
@@ -1071,6 +1131,8 @@ function defaultValueByType(type) {
 function getTipoSimboloByType(type) {
     if (reservedWords.includes(type)) {
         return "simple";
+    } else if (type !== "vector") {
+        return "structData";
     } else {
         return type;
     }

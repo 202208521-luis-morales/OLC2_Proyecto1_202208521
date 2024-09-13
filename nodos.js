@@ -374,7 +374,7 @@ export class NStruct extends Expresion {
 
     /**
     * @param {Object} options
-    * @param {string} options.id Identificador de la variable
+    * @param {string} options.id Tipo del struct
     * @param {{id: string, exp: Expresion}[]} options.vals
     */
     constructor({ id, vals }) {
@@ -382,6 +382,7 @@ export class NStruct extends Expresion {
 
         /**
          * @type {string}
+         * Tipo del struct
         */
         this.id = id;
 

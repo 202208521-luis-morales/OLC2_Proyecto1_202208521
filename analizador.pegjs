@@ -35,7 +35,7 @@
       'ternario': nodos.Ternario,
       'newExp': nodos.NewExp,
       'structDecl': nodos.StructDecl,
-      'structData': nodos.NStructData
+      'structData': nodos.NStruct
     }
 
     const nodo = new tipos[tipoNodo](props)
@@ -58,7 +58,7 @@ StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:(
   return crearNodo('structDecl', { id, attrs })
 }
 
-VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float") _ brackets:( _"[" _ "]" _ )* _ id:Identificador _ optValue:("=" _ exp:Expresion)? _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, numBrackets: brackets.length, exp: optValue ? optValue[2] : null }) }
+VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ brackets:( _"[" _ "]" _ )* _ id:Identificador _ optValue:("=" _ exp:Expresion)? _ ";" { return crearNodo('declaracionVariable1', { type: typ, id, numBrackets: brackets.length, exp: optValue ? optValue[2] : null }) }
 
 VarDcl = "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
 
