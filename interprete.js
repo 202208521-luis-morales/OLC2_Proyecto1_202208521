@@ -407,7 +407,11 @@ export class InterpreterVisitor extends BaseVisitor {
                         if (prev.prevVal.tipoSimbolo !== "vector") {
                             throw new Error("El valor referenciado no es un array.");
                         } else {
-                            return prev.prevVal.valor.length;
+                            return { type: currVal.type, property: currVal.property, prevVal: {
+                                tipoSimbolo: "simple",
+                                tipoVariable: "int",
+                                valor: prev.prevVal.valor.length
+                            }}
                         }
                     } else if (head === "Object") {
                         if ((currIdx === 0) && (currVal.property === "keys")) {
@@ -420,34 +424,37 @@ export class InterpreterVisitor extends BaseVisitor {
                             throw new Error("El valor referenciado no existe.");
                         } else {
                             return { type: currVal.type, property: currVal.property, prevVal: prev.prevVal.valor[currVal.property] };
-                            //return prev.prevVal.valor[currVal.property].valor;
                         }
                     } else {
                         // Dado que los structs y arrays no guardan funciones, se puede hacer esto
                         return { type: currVal.type, property: currVal.property, prevVal: prev }
                     }
-
-                    /*
-                    if (prev[currVal.property] === undefined) {
-                        throw new Error("El valor referenciado no existe.");
-                    } else {
-                        return prev.valor[currVal.property].valor;
-                    }
-                    */
                 } else if (currVal.type === "ArrayAccess") {
-                    if (prev.tipoSimbolo !== "vector") {
+                    if (prev.prevVal.tipoSimbolo !== "vector") {
                         throw new Error("El valor referenciado no es un array.");
                     } else {
                         if (this.getTrueType(currVal.index) === "int") {
                             let acceptedIndex = Number(currVal.index.accept(this));
 
-                            node.tipoSimbolo = prev.valor[acceptedIndex].tipoSimbolo;
-                            node.tipoVariable = prev.valor[acceptedIndex].tipoVariable;
+                            node.tipoSimbolo = prev.prevVal.valor[acceptedIndex].tipoSimbolo;
+                            node.tipoVariable = prev.prevVal.valor[acceptedIndex].tipoVariable;
 
-                            if (prev.valor[acceptedIndex].tipoSimbolo === "vector") {
-                                return lodashCloneDeep(prev.valor)[acceptedIndex];
+                            if (prev.prevVal.valor[acceptedIndex].tipoSimbolo === "vector") {
+                                return {
+                                    type: currVal.type, property: prev.property, prevVal: {
+                                        tipoSimbolo: lodashCloneDeep(prev.prevVal.valor)[acceptedIndex].tipoSimbolo,
+                                        tipoVariable: lodashCloneDeep(prev.prevVal.valor)[acceptedIndex].tipoVariable,
+                                        valor: lodashCloneDeep(prev.prevVal.valor)[acceptedIndex].valor
+                                    }
+                                }
                             } else {
-                                return prev.valor[acceptedIndex].valor;
+                                return {
+                                    type: currVal.type, property: prev.property, prevVal: {
+                                        tipoSimbolo: prev.prevVal.valor[acceptedIndex].tipoSimbolo,
+                                        tipoVariable: prev.prevVal.valor[acceptedIndex].tipoVariable,
+                                        valor: prev.prevVal.valor[acceptedIndex].valor
+                                    }
+                                }
                             }
                         } else {
                             throw new Error("El indice tiene que ser un entero");
@@ -472,20 +479,32 @@ export class InterpreterVisitor extends BaseVisitor {
                         }
                     } else if (prev.type && prev.type === "PropertyAccess") {
                         if (prev.property === "indexOf") {
-                            if (prev.prevVal.tipoSimbolo !== "vector") throw new Error("indexOf solo se puede usar en arrays");
+                            if (prev.prevVal.prevVal.tipoSimbolo !== "vector") throw new Error("indexOf solo se puede usar en arrays");
 
                             if ((currVal.arguments.length === 1) && (this.getTrueType(currVal.arguments[0]) === "int")) {
                                 const acceptedVal = currVal.arguments[0].accept(this);
 
-                                return prev.prevVal.valor.map((elem) => elem.valor).indexOf(acceptedVal);
+                                return {
+                                    type: currVal.type, property: currVal.property, prevVal: {
+                                        tipoSimbolo: "simple",
+                                        tipoVariable: "int",
+                                        valor: prev.prevVal.prevVal.valor.map((elem) => elem.valor).indexOf(acceptedVal)
+                                    }
+                                };
                             } else {
                                 throw new Error("Se esperaba 1 parámetro entero")
                             }
                         } else if (prev.property === "join") {
-                            if (prev.prevVal.tipoSimbolo !== "vector") throw new Error("join solo se puede usar en arrays");
+                            if (prev.prevVal.prevVal.tipoSimbolo !== "vector") throw new Error("join solo se puede usar en arrays");
 
                             if (currVal.arguments.length === 0) {
-                                return prev.prevVal.valor.map((elem) => elem.valor).join();
+                                return {
+                                    type: currVal.type, property: currVal.property, prevVal: {
+                                        tipoSimbolo: "simple",
+                                        tipoVariable: "int",
+                                        valor: prev.prevVal.prevVal.valor.map((elem) => elem.valor).join()
+                                    }
+                                };
                             } else {
                                 throw new Error("Se esperaba 0 parámetros");
                             }
@@ -501,7 +520,7 @@ export class InterpreterVisitor extends BaseVisitor {
             node.tipoSimbolo = headData.tipoSimbolo;
             node.tipoVariable = headData.tipoVariable;
 
-            if (headData.tipoSimbolo === "vector") {
+            if ((headData.tipoSimbolo === "vector") || (headData.tipoSimbolo === "structData")) {
                 return lodashCloneDeep(headData.valor);
             } else {
                 return headData.valor;
