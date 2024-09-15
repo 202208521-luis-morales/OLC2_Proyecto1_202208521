@@ -12,7 +12,7 @@ export class ContinueException extends Error {
 
 export class ReturnException extends Error {
     /**
-     * @param {any} value
+     * @param {{tipoSimbolo: string, tipoVariable: string, valor: any}} value
      */
     constructor(value) {
         super('Return');

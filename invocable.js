@@ -1,8 +1,6 @@
 import { InterpreterVisitor } from "./interprete.js";
 
 export class Invocable {
-
-
     aridad() {
         throw new Error('No implementado');
     }

@@ -32,7 +32,8 @@ export class FuncionForanea extends Invocable {
         const entornoNuevo = new Entorno(this.clousure);
 
         this.nodo.params.forEach((param, i) => {
-            entornoNuevo.set(param, args[i]);
+            const {tipoSimbolo, tipoVariable, valor} = args[i];
+            entornoNuevo.set(param.id, tipoSimbolo, tipoVariable, valor);
         });
 
         const entornoAntesDeLaLlamada = interprete.entornoActual;
@@ -44,9 +45,8 @@ export class FuncionForanea extends Invocable {
             interprete.entornoActual = entornoAntesDeLaLlamada;
 
             if (error instanceof ReturnException) {
-
                 // if(this.nodo.tipoRetorno !== error.value.tipo){
-                return error.value
+                return error.value;
             }
 
             // TODO: manejar el resto de sentencias de control

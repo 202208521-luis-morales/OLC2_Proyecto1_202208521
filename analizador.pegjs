@@ -48,11 +48,12 @@ programa = _ dcl:Declaracion* _ { return dcl }
 
 Declaracion = dcl:StructDecl _ { return dcl }
             / dcl:ClassDcl _ { return dcl }
+            / dcl:FuncDcl _ { return dcl }
             / dcl:VarDcl1 _ { return dcl}
             / dcl:VarDcl _ { return dcl }
-            / dcl:FuncDcl _ { return dcl }
             / dcl:Asignacion _ ";" _ {return dcl}
             / stmt:Stmt _ { return stmt }
+            / id:Identificador _ "(" _ args:( _ exp:Expresion _ restParams:( _ "," _ exp1:Expresion _ { return exp1 })* { let arr = restParams; arr.unshift(exp); return arr } )? _ ")" _ ";" _ { return crearNodo('llamada', { id, args: args || [] }); }
             
 StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ iden:Identificador _ ";" _ { return { tipo, iden } })+ _ "}" _ ";" {
   return crearNodo('structDecl', { id, attrs })
@@ -62,7 +63,10 @@ VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { retu
 
 VarDcl = "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
 
-FuncDcl = "function" _ id:Identificador _ "(" _ params:Parametros? _ ")" _ bloque:Bloque { return crearNodo('dclFunc', { id, params: params || [], bloque }) }
+FuncDcl = typ:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador _ "(" _ params:Parametros? _ ")" _ bloque:Bloque { 
+  return crearNodo('dclFunc', { typ, id, params: params || [], bloque })
+  //console.log({typ, id, params, bloque});
+  }
 
 ClassDcl = "class" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" { return crearNodo('dclClase', { id, dcls }) }
 
@@ -73,7 +77,9 @@ ClassBody = dcl:VarDcl _ { return dcl }
 // id = 'param1'
 // params = ['param2, 'param3']
 // return ['param1', ...['param2', 'param3']]
-Parametros = id:Identificador _ params:("," _ ids:Identificador { return ids })* { return [id, ...params] }
+Parametros = _ firstParam:(tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } )  _ params:("," _ (tipo:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } ) _)* { 
+  return [firstParam, ...params] 
+  }
 
 Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ ";" { return crearNodo('print', { exp: [exp].concat(expList.map(t => t[2])) }) }
     / Bloque:Bloque { return Bloque }
@@ -91,7 +97,7 @@ Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ 
     / "break" _ ";" { return crearNodo('break') }
     / "continue" _ ";" { return crearNodo('continue') }
     / "return" _ exp:Expresion? _ ";" { return crearNodo('return', { exp }) }
-    / exp:Expresion _ ";" { return crearNodo('expresionStmt', { exp }) }
+    // exp:Expresion _ ";" { return crearNodo('expresionStmt', { exp }) }
 
 Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
 

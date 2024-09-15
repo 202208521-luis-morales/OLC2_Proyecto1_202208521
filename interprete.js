@@ -1,6 +1,6 @@
 import { Entorno } from "./entorno.js";
 import { BaseVisitor } from "./visitor.js";
-import nodos, { Expresion } from './nodos.js'
+import nodos, { Expresion, Llamada } from './nodos.js'
 import { BreakException, ContinueException, ReturnException } from "./transferencia.js";
 import { Invocable } from "./invocable.js";
 import { embebidas } from "./embebidas.js";
@@ -508,6 +508,17 @@ export class InterpreterVisitor extends BaseVisitor {
                             } else {
                                 throw new Error("Se esperaba 0 parámetros");
                             }
+                        } else {
+                            if (prev.prevVal.tipoSimbolo !== "function") throw new Error(prev.prevVal.property + " no es una función");
+        
+                            const call = new Llamada({id: prev.property, args: currVal.arguments});
+                            const resCall = call.accept(this);
+
+                            return { type: currVal.type, property: currVal.property, prevVal: {
+                                tipoSimbolo: call.tipoSimbolo,
+                                tipoVariable: call.tipo,
+                                valor: resCall
+                            }}
                         }
                     }
                 }
@@ -778,31 +789,58 @@ export class InterpreterVisitor extends BaseVisitor {
      * @type {BaseVisitor['visitReturn']}
      */
     visitReturn(node) {
-        let valor = null
+        let valor = null;
+        let tipoSimbolo = "";
+        let tipoVariable = "";
+
         if (node.exp) {
             valor = node.exp.accept(this);
+            tipoVariable = this.getTrueType(node.exp);
+            tipoSimbolo = getTipoSimboloByType(tipoVariable);
         }
-        throw new ReturnException(valor);
+
+        throw new ReturnException({tipoSimbolo, tipoVariable, valor});
     }
 
     /**
     * @type {BaseVisitor['visitLlamada']}
     */
     visitLlamada(node) {
-        const funcion = node.callee.accept(this);
+        // Obtener funcion de tabla
+        const funcion = this.entornoActual.get(node.id);
 
-        const argumentos = node.args.map(arg => arg.accept(this));
+        if (funcion.valor.aridad() !== node.args.length) {
+            throw new Error('Cantidad enviada de parámetros incorrecta');
+        }
 
-        if (!(funcion instanceof Invocable)) {
+        if (!(funcion.valor instanceof Invocable)) {
             throw new Error('No es invocable');
-            // 1() "sdalsk"()
         }
 
-        if (funcion.aridad() !== argumentos.length) {
-            throw new Error('Aridad incorrecta');
-        }
+        // Suponiendo que fueron enviados en el orden correcto (y cantidad correcta) por el usuario (sino lanza error)
+        const argumentos = node.args.map((arg, idx) => {
+            const acceptedVal = arg.accept(this);
+            const tipoVariable = this.getTrueType(arg);
+            const tipoSimbolo = getTipoSimboloByType(tipoVariable);
 
-        return funcion.invocar(this, argumentos);
+            // TODO: Checar si es vector también (bombardeen a box)
+            if (funcion.valor.nodo.params[idx].tipo !== this.getTrueType(arg)) {
+                throw new Error("El parámetro " + Number(idx) + " no es del tipo requerido definido en la función");
+            }
+            
+            return {
+                tipoSimbolo,
+                tipoVariable,
+                valor: acceptedVal
+            };
+        });
+
+        const callResult = funcion.valor.invocar(this, argumentos);
+
+        node.tipo = callResult.tipoVariable;
+        node.tipoSimbolo = callResult.tipoSimbolo;
+
+        return callResult.valor;
     }
 
     /**
@@ -810,7 +848,7 @@ export class InterpreterVisitor extends BaseVisitor {
     */
     visitFuncDcl(node) {
         const funcion = new FuncionForanea(node, this.entornoActual);
-        this.entornoActual.set(node.id, funcion);
+        this.entornoActual.set(node.id, "function", node.typ, funcion);
     }
 
 
@@ -896,6 +934,7 @@ export class InterpreterVisitor extends BaseVisitor {
             || node.constructor.name === "OperacionBinaria"
             || node.constructor.name === "Ternario"
             || node.constructor.name === "Agrupacion"
+            || node.constructor.name === "Llamada"
         ) {
             return node.tipo;
         } else if (node.constructor.name === "ReferenciaVariable") {

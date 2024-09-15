@@ -929,18 +929,22 @@ export class Llamada extends Expresion {
 
     /**
     * @param {Object} options
-    * @param {Expresion} options.callee Expresion a llamar
- * @param {Expresion[]} options.args Argumentos de la llamada
+    * @param {string} options.id Funcion a llamar
+    * @param {Expresion[]} options.args Argumentos de la llamada
     */
-    constructor({ callee, args }) {
+    constructor({ id, args }) {
         super();
 
         /**
-         * Expresion a llamar
-         * @type {Expresion}
+         * Funcion a llamar
+         * @type {string}
         */
-        this.callee = callee;
+        this.id = id;
 
+
+        this.tipo = null;
+
+        this.tipoSimbolo = null;
 
         /**
          * Argumentos de la llamada
@@ -962,11 +966,12 @@ export class FuncDcl extends Expresion {
 
     /**
     * @param {Object} options
+    * @param {string} options.typ Tipo de funcion
     * @param {string} options.id Identificador de la funcion
- * @param {string[]} options.params Parametros de la funcion
- * @param {Bloque} options.bloque Cuerpo de la funcion
+    * @param {{tipo: string, id: string}[]} options.params Parametros de la funcion
+    * @param {Bloque} options.bloque Cuerpo de la funcion
     */
-    constructor({ id, params, bloque }) {
+    constructor({ typ, id, params, bloque }) {
         super();
 
         /**
@@ -975,10 +980,16 @@ export class FuncDcl extends Expresion {
         */
         this.id = id;
 
+        /**
+         * Identificador de la funcion
+         * @type {string}
+        */
+        this.typ = typ;
+
 
         /**
          * Parametros de la funcion
-         * @type {string[]}
+         * @type {{tipo: string, id: string}[]}
         */
         this.params = params;
 
