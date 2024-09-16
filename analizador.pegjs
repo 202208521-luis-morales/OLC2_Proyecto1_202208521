@@ -82,7 +82,7 @@ Parametros = _ firstParam:(tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][
   return [firstParam, ...params] 
   }
 
-Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ ";" { return crearNodo('print', { exp: [exp].concat(expList.map(t => t[2])) }) }
+Stmt = "System.out.println(" _ exp:Expresion _ expList:(_ "," _ exp1:Expresion _ { return exp1 })* ")" _ ";" { return crearNodo('print', { exp: [exp].concat(expList) }) }
     / Bloque:Bloque { return Bloque }
     / "if" _ "(" _ cond:Expresion _ ")" _ stmtTrue:Stmt 
       stmtFalse:(
@@ -92,8 +92,9 @@ Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ 
       return crearNodo('switch', { cond, listCases, defaultCase })
     }
     / "while" _ "(" _ cond:Expresion _ ")" _ stmt:Stmt { return crearNodo('while', { cond, stmt }) }
-    / "for" _ "(" _ init:(VarDcl1 / VarDcl) _ cond:Expresion _ ";" _ inc:Asignacion _ ")" _ stmt:Stmt {
-      return crearNodo('for', { init, cond, inc, stmt })
+    / "for" _ "(" _ params:(ForParamsEach / ForParamsNormal) _ ")" _ stmt:Stmt {
+      params["stmt"] = stmt;
+      return crearNodo('for', params)
     }
     / "break" _ ";" { return crearNodo('break') }
     / "continue" _ ";" { return crearNodo('continue') }
@@ -101,6 +102,12 @@ Stmt = "System.out.println(" _ exp:Expresion _ expList:("," _ Expresion)* ")" _ 
     // exp:Expresion _ ";" { return crearNodo('expresionStmt', { exp }) }
 
 Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
+
+ForParamsNormal = init:(VarDcl1 / VarDcl) _ cond:Expresion _ ";" _ inc:Asignacion { return { type: "normal", init, cond, inc } }
+
+ForParamsEach = tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) " " _ id:Identificador _ ":" _ arr:Expresion {
+  return { type: "each", tipo, id, arr }
+}
 
 /*
 ForInit = dcl:VarDcl { return dcl }

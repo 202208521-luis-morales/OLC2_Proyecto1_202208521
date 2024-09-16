@@ -816,14 +816,39 @@ export class While extends Expresion {
 export class For extends Expresion {
 
     /**
+    * type: "each", tipo, id, arr
     * @param {Object} options
+    * @param {string} options.type Tipo de for
+    * @param {string} options.tipo Tipo del valor para el forEach
+    * @param {string} options.id La nueva variable del forEach
+    * @param {Expresion} options.arr Array de forEach
     * @param {Expresion} options.init Inicializacion del for
- * @param {Expresion} options.cond Condicion del for
- * @param {Expresion} options.inc Incremento del for
- * @param {Expresion} options.stmt Cuerpo del for
+    * @param {Expresion} options.cond Condicion del for
+    * @param {Expresion} options.inc Incremento del for
+    * @param {Expresion} options.stmt Cuerpo del for
     */
-    constructor({ init, cond, inc, stmt }) {
+    constructor({ type, init = null, cond = null, inc = null, stmt = null, tipo = null, id = null, arr = null  }) {
         super();
+
+        /**
+         * @type {string}
+        */
+        this.type = type;
+
+        /**
+         * @type {string}
+        */
+        this.tipo = tipo;
+
+        /**
+         * @type {string}
+        */
+        this.id = id;
+
+        /**
+         * @type {Expresion}
+        */
+        this.arr = arr;
 
         /**
          * Inicializacion del for

@@ -1,6 +1,6 @@
 import { Entorno } from "./entorno.js";
 import { BaseVisitor } from "./visitor.js";
-import nodos, { Expresion, Llamada } from './nodos.js'
+import nodos, { Expresion, Llamada, NInt, ReferenciaVariable } from './nodos.js'
 import { BreakException, ContinueException, ReturnException } from "./transferencia.js";
 import { Invocable } from "./invocable.js";
 import { embebidas } from "./embebidas.js";
@@ -384,7 +384,7 @@ export class InterpreterVisitor extends BaseVisitor {
             } else {
                 tipoValor = this.getTrueType(node.exp);
             }
-            
+
             if (tipoValor === tipoVariable) {
                 this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable);
             } else {
@@ -449,8 +449,10 @@ export class InterpreterVisitor extends BaseVisitor {
                     if (prev.prevVal.tipoSimbolo !== "vector") {
                         throw new Error("El valor referenciado no es un array.");
                     } else {
+                        let aIndex = currVal.index.accept(this);
+
                         if (this.getTrueType(currVal.index) === "int") {
-                            let acceptedIndex = Number(currVal.index.accept(this));
+                            let acceptedIndex = Number(aIndex);
 
                             node.tipoSimbolo = prev.prevVal.valor[acceptedIndex].tipoSimbolo;
                             node.tipoVariable = prev.prevVal.valor[acceptedIndex].tipoVariable;
@@ -473,6 +475,7 @@ export class InterpreterVisitor extends BaseVisitor {
                                 }
                             }
                         } else {
+                            console.log({currVal})
                             throw new Error("El indice tiene que ser un entero");
                         }
                     }
@@ -865,18 +868,53 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitFor(node) {
         // this.prevContinue = node.inc;
+        let nInit;
+        let nCond;
+        let nInc;
+
+        if (node.type === "each") {
+            nInit = new nodos.DeclaracionVariable1({ type: "int", id: "M06wy53d5w", numBrackets: 0, exp: new NInt({ valor: 0 }) })
+            nCond = new nodos.OperacionBinaria({
+                izq: new ReferenciaVariable({ ref: { head: "M06wy53d5w" } }), der: () => {
+                    const acceptedArr = node.arr.accept(this);
+
+                    let tipoSim;
+
+                    if (node.arr.constructor.name === "ReferenciaVariable") {
+                        tipoSim = node.arr.tipoSimbolo;
+                    } else if (node.arr.constructor.name === "NVector") {
+                        tipoSim = "vector"
+                    } else {
+                        tipoSim = this.getTrueType(node.arr)
+                    }
+
+                    if ("vector" === this.getTrueType(node.arr)) {
+                        return acceptedArr.length;
+                    } else {
+                        throw new Error("El valor a recorrer no es un array")
+                    }
+                }, op: "<"
+            })
+
+            nInc = new nodos.Asignacion({ ref: { head: "M06wy53d5w" }, op: "+=", value: new NInt(1) })
+        } else if (node.type === "normal") {
+            nInit = node.init
+            nCond = node.cond
+            nInc = node.inc
+        }
+
         const incrementoAnterior = this.prevContinue;
-        this.prevContinue = node.inc;
+        this.prevContinue = nInc;
 
         const forTraducido = new nodos.Bloque({
             dcls: [
-                node.init,
+                nInit,
                 new nodos.While({
-                    cond: node.cond,
+                    cond: nCond,
                     stmt: new nodos.Bloque({
                         dcls: [
                             node.stmt,
-                            node.inc
+                            nInc
                         ]
                     })
                 })
