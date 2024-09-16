@@ -260,6 +260,14 @@ export class InterpreterVisitor extends BaseVisitor {
     }
 
     /**
+     * @type {BaseVisitor['visitTypeOf']}
+     */
+    visitTypeOf(node) {
+        node.exp.accept(this);
+        return this.getTrueType(node.exp);
+    }
+
+    /**
      * @type {BaseVisitor['visitStructDecl']}
      */
     visitStructDecl(node) {
@@ -369,14 +377,14 @@ export class InterpreterVisitor extends BaseVisitor {
                 }
             } else if (node.exp.constructor.name === "ReferenciaVariable") {
                 typeSymbol = node.exp.tipoSimbolo;
-                tipoValor = node.exp.tipoVariable;
+                tipoValor = node.exp.tipo;
             } else if (!reservedWords.includes(tipoVariable)) {
                 typeSymbol = "structData";
                 tipoValor = this.getTrueType(node.exp);
             } else {
                 tipoValor = this.getTrueType(node.exp);
             }
-
+            
             if (tipoValor === tipoVariable) {
                 this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable);
             } else {
@@ -396,22 +404,30 @@ export class InterpreterVisitor extends BaseVisitor {
         const { head, tail } = node.refData;
         let headData;
 
-        if (head !== "Object") headData = this.entornoActual.get(head);
+        if (head !== "Object"
+            && head !== "parseInt"
+            && head !== "parsefloat"
+            && head !== "toString"
+            && head !== "toLowerCase"
+            && head !== "toUpperCase"
+        ) headData = this.entornoActual.get(head);
 
         if (tail.length > 0) {
             let toReturn = tail.reduce((prev, currVal, currIdx) => {
-                let hadToFinish = false;
+                //let hadToFinish = false;
 
                 if (currVal.type === "PropertyAccess") {
                     if (currVal.property === "length") {
                         if (prev.prevVal.tipoSimbolo !== "vector") {
                             throw new Error("El valor referenciado no es un array.");
                         } else {
-                            return { type: currVal.type, property: currVal.property, prevVal: {
-                                tipoSimbolo: "simple",
-                                tipoVariable: "int",
-                                valor: prev.prevVal.valor.length
-                            }}
+                            return {
+                                type: currVal.type, property: currVal.property, prevVal: {
+                                    tipoSimbolo: "simple",
+                                    tipoVariable: "int",
+                                    valor: prev.prevVal.valor.length
+                                }
+                            }
                         }
                     } else if (head === "Object") {
                         if ((currIdx === 0) && (currVal.property === "keys")) {
@@ -509,27 +525,133 @@ export class InterpreterVisitor extends BaseVisitor {
                                 throw new Error("Se esperaba 0 parámetros");
                             }
                         } else {
-                            if (prev.prevVal.tipoSimbolo !== "function") throw new Error(prev.prevVal.property + " no es una función");
-        
-                            const call = new Llamada({id: prev.property, args: currVal.arguments});
-                            const resCall = call.accept(this);
+                            if ((currIdx === 0) && (head === "parseInt"
+                                || head === "parsefloat"
+                                || head === "toString"
+                                || head === "toLowerCase"
+                                || head === "toUpperCase")) {
 
-                            return { type: currVal.type, property: currVal.property, prevVal: {
-                                tipoSimbolo: call.tipoSimbolo,
-                                tipoVariable: call.tipo,
-                                valor: resCall
-                            }}
+                                switch (head) {
+
+                                    case "parseInt":
+                                        if ((currVal.arguments.length === 1) && (this.getTrueType(currVal.arguments[0]) === "string")) {
+                                            const acceptedVal = currVal.arguments[0].accept(this);
+
+                                            const parsedValue = parseInt(acceptedVal);
+
+                                            if (isNaN(parsedValue)) {
+                                                throw new Error(`No es posible convertir "${acceptedVal}" a int.`);
+                                            }
+
+                                            return {
+                                                type: currVal.type, property: currVal.property, prevVal: {
+                                                    tipoSimbolo: "simple",
+                                                    tipoVariable: "int",
+                                                    valor: parsedValue
+                                                }
+                                            };
+                                        } else {
+                                            throw new Error("Se esperaba 1 parámetro string")
+                                        }
+                                    case "parsefloat":
+                                        if ((currVal.arguments.length === 1) && (this.getTrueType(currVal.arguments[0]) === "string")) {
+                                            const acceptedVal = currVal.arguments[0].accept(this);
+
+                                            const parsedValue = Number(acceptedVal);
+
+                                            if (isNaN(parsedValue)) {
+                                                throw new Error(`No es posible convertir "${acceptedVal}" a float.`);
+                                            }
+
+                                            return {
+                                                type: currVal.type, property: currVal.property, prevVal: {
+                                                    tipoSimbolo: "simple",
+                                                    tipoVariable: "int",
+                                                    valor: parsedValue
+                                                }
+                                            };
+                                        } else {
+                                            throw new Error("Se esperaba 1 parámetro string")
+                                        }
+
+                                    case "toString":
+                                        if ((currVal.arguments.length === 1) && (this.getTrueType(currVal.arguments[0]) === "float"
+                                            || this.getTrueType(currVal.arguments[0]) === "boolean")
+                                            || this.getTrueType(currVal.arguments[0]) === "int") {
+
+                                            const acceptedVal = currVal.arguments[0].accept(this);
+
+                                            if (this.getTrueType(currVal.arguments[0]) === "float") {
+                                                return {
+                                                    type: currVal.type, property: currVal.property, prevVal: {
+                                                        tipoSimbolo: "simple",
+                                                        tipoVariable: "string",
+                                                        valor: acceptedVal.toFixed(2)
+                                                    }
+                                                };
+                                            } else if (this.getTrueType(currVal.arguments[0]) === "int") {
+                                                return {
+                                                    type: currVal.type, property: currVal.property, prevVal: {
+                                                        tipoSimbolo: "simple",
+                                                        tipoVariable: "string",
+                                                        valor: acceptedVal.toFixed(0)
+                                                    }
+                                                };
+                                            } else if (this.getTrueType(currVal.arguments[0]) === "boolean") {
+                                                return {
+                                                    type: currVal.type, property: currVal.property, prevVal: {
+                                                        tipoSimbolo: "simple",
+                                                        tipoVariable: "string",
+                                                        valor: acceptedVal.toString()
+                                                    }
+                                                };
+                                            }
+
+                                        } else {
+                                            throw new Error("Se esperaba 1 parámetro boolean, float o int")
+                                        }
+
+                                    case "toLowerCase":
+                                    case "toUpperCase":
+                                        if ((currVal.arguments.length === 1) && (this.getTrueType(currVal.arguments[0]) === "string")) {
+                                            const acceptedVal = currVal.arguments[0].accept(this);
+
+                                            return {
+                                                type: currVal.type, property: currVal.property, prevVal: {
+                                                    tipoSimbolo: "simple",
+                                                    tipoVariable: "string",
+                                                    valor: head === "toLowerCase" ? acceptedVal.toLocaleLowerCase() : acceptedVal.toLocaleUpperCase()
+                                                }
+                                            };
+                                        } else {
+                                            throw new Error("Se esperaba 1 parámetro string")
+                                        }
+                                }
+                            } else {
+                                if (prev.prevVal.tipoSimbolo !== "function") throw new Error(prev.prevVal.property + " no es una función");
+
+                                const call = new Llamada({ id: prev.property, args: currVal.arguments });
+                                const resCall = call.accept(this);
+
+                                return {
+                                    type: currVal.type, property: currVal.property, prevVal: {
+                                        tipoSimbolo: call.tipoSimbolo,
+                                        tipoVariable: call.tipo,
+                                        valor: resCall
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }, { type: "PropertyAccess", property: head, prevVal: headData });
 
             node.tipoSimbolo = toReturn.prevVal.tipoSimbolo;
-            node.tipoVariable = toReturn.prevVal.tipoVariable;
+            node.tipo = toReturn.prevVal.tipoVariable;
             return toReturn.prevVal.valor;
         } else {
             node.tipoSimbolo = headData.tipoSimbolo;
-            node.tipoVariable = headData.tipoVariable;
+            node.tipo = headData.tipoVariable;
 
             if ((headData.tipoSimbolo === "vector") || (headData.tipoSimbolo === "structData")) {
                 return lodashCloneDeep(headData.valor);
@@ -799,7 +921,7 @@ export class InterpreterVisitor extends BaseVisitor {
             tipoSimbolo = getTipoSimboloByType(tipoVariable);
         }
 
-        throw new ReturnException({tipoSimbolo, tipoVariable, valor});
+        throw new ReturnException({ tipoSimbolo, tipoVariable, valor });
     }
 
     /**
@@ -827,7 +949,7 @@ export class InterpreterVisitor extends BaseVisitor {
             if (funcion.valor.nodo.params[idx].tipo !== this.getTrueType(arg)) {
                 throw new Error("El parámetro " + Number(idx) + " no es del tipo requerido definido en la función");
             }
-            
+
             return {
                 tipoSimbolo,
                 tipoVariable,
@@ -837,10 +959,19 @@ export class InterpreterVisitor extends BaseVisitor {
 
         const callResult = funcion.valor.invocar(this, argumentos);
 
-        node.tipo = callResult.tipoVariable;
-        node.tipoSimbolo = callResult.tipoSimbolo;
+        if ((callResult === null) && (funcion.tipoVariable === "void")) {
+            node.tipo = funcion.tipoVariable;
+            node.tipoSimbolo = funcion.tipoSimbolo;
 
-        return callResult.valor;
+            return null;
+        } else if ((callResult !== null) && (funcion.tipoVariable !== "void")) {
+            node.tipo = callResult.tipoVariable;
+            node.tipoSimbolo = callResult.tipoSimbolo;
+
+            return callResult.valor;
+        } else {
+            throw new Error(funcion.tipoVariable === "void" ? "La función void no debe de retornar nada" : "La función debía de retornar por lo menos un valor")
+        }
     }
 
     /**
@@ -935,10 +1066,9 @@ export class InterpreterVisitor extends BaseVisitor {
             || node.constructor.name === "Ternario"
             || node.constructor.name === "Agrupacion"
             || node.constructor.name === "Llamada"
+            || node.constructor.name === "ReferenciaVariable"
         ) {
             return node.tipo;
-        } else if (node.constructor.name === "ReferenciaVariable") {
-            return this.entornoActual.get(node.refData.head).tipoVariable
         } else if (node.constructor.name === "NStruct") {
             return node.id
         } else {

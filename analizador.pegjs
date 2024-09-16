@@ -35,7 +35,8 @@
       'ternario': nodos.Ternario,
       'newExp': nodos.NewExp,
       'structDecl': nodos.StructDecl,
-      'structData': nodos.NStruct
+      'structData': nodos.NStruct,
+      'typeOf': nodos.TypeOf
     }
 
     const nodo = new tipos[tipoNodo](props)
@@ -77,7 +78,7 @@ ClassBody = dcl:VarDcl _ { return dcl }
 // id = 'param1'
 // params = ['param2, 'param3']
 // return ['param1', ...['param2', 'param3']]
-Parametros = _ firstParam:(tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } )  _ params:("," _ (tipo:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } ) _)* { 
+Parametros = _ firstParam:(tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } )  _ params:("," _ tipo:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } )* { 
   return [firstParam, ...params] 
   }
 
@@ -275,6 +276,7 @@ Dato = [0-9]+"."[0-9]+ {return crearNodo('float', { valor: Number(text()) })}
     }
   / "(" _ exp:Expresion _ ")" { return crearNodo('agrupacion', { exp }) }
   / "new" _ type:("string"/"boolean"/"char"/"int"/"float") _ dimensions:( _ "[" _ num:([0-9])+ _ "]" _ { return num; })+ { return crearNodo('newExp', { type, dimensions: dimensions.map((elem) => Number(elem)), level: dimensions.length } ) }
+  / "typeof " _ exp:Expresion { return crearNodo('typeOf', { exp }) } 
   / text:string { return crearNodo('string', { valor: text })}
   / text:null { return crearNodo('null', { valor: text })}
   / text:boolean { return crearNodo('boolean', { valor: text })}
@@ -325,8 +327,8 @@ FunctionCall
   }
 
 ArgumentList
-  = head:Expresion tail:("," Expresion)* {
-    return [head].concat(tail.map(function(item) { return item[1]; }));
+  = head:Expresion tail:(_ "," _ exp:Expresion _ { return exp } )* {
+    return [head].concat(tail);
   }
 
 

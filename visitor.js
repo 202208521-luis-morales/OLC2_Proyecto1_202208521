@@ -39,6 +39,7 @@
 
  * @typedef {import('./nodos').NewExp} NewExp
 
+ * @typedef {import('./nodos').TypeOf} TypeOf
 
  * @typedef {import('./nodos').ReferenciaVariable} ReferenciaVariable
 
@@ -134,6 +135,14 @@ export class BaseVisitor {
      */
     visitTernario(node) {
         throw new Error('Metodo visitTernario no implementado');
+    }
+
+    /**
+     * @param {TypeOf} node
+     * @returns {any}
+     */
+    visitTypeOf(node) {
+        throw new Error('Metodo visitTypeOf no implementado');
     }
 
 

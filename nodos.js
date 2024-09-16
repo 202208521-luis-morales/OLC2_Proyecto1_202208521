@@ -569,7 +569,7 @@ export class ReferenciaVariable extends Expresion {
          * 
          * @type {string|null}
          */
-        this.tipoVariable = null;
+        this.tipo = null;
 
         /**
          * Datos de la referencia
@@ -900,6 +900,42 @@ export class Continue extends Expresion {
     }
 }
 
+export class TypeOf extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.exp Expresion a sacar tipo
+    */
+    constructor({exp}) {
+        super();
+
+        /**
+         * TipoVariable
+         * @type {string}
+        */
+        this.tipo = "string";
+
+        /**
+         * TipoSimbolo
+         * @type {string}
+        */
+        this.tipoSimbolo = "simple";
+        
+        /**
+         * Expresion a sacar tipo
+         * @type {Expresion}
+        */
+        this.exp = exp;
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitTypeOf(this);
+    }
+}
+
 export class Return extends Expresion {
 
     /**
@@ -1150,5 +1186,5 @@ export class Set extends Expresion {
     }
 }
 
-export default { NChar, NStruct, StructDecl, NVector, NewExp, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
+export default { NChar, TypeOf, NStruct, StructDecl, NVector, NewExp, NInt, Switch, NFloat, Expresion, Ternario, NBoolean, NNull, OperacionBinaria, OperacionUnaria, Agrupacion, NString, DeclaracionVariable1, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, FuncDcl, ClassDcl, Instancia, Get, Set }
 
