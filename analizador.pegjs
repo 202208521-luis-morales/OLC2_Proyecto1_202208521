@@ -56,7 +56,7 @@ Declaracion = dcl:StructDecl _ { return dcl }
             / stmt:Stmt _ { return stmt }
             / id:Identificador _ "(" _ args:( _ exp:Expresion _ restParams:( _ "," _ exp1:Expresion _ { return exp1 })* { let arr = restParams; arr.unshift(exp); return arr } )? _ ")" _ ";" _ { return crearNodo('llamada', { id, args: args || [] }); }
             
-StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ iden:Identificador _ ";" _ { return { tipo, iden } })+ _ "}" _ ";" {
+StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() }))  _ brackets:( _"[" _ "]" _ )* _  iden:Identificador _ ";" _ { return { tipo, brakets, iden } })+ _ "}" _ ";" {
   return crearNodo('structDecl', { id, attrs })
 }
 
@@ -64,8 +64,8 @@ VarDcl1 = typ:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { retu
 
 VarDcl = "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
 
-FuncDcl = typ:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador _ "(" _ params:Parametros? _ ")" _ bloque:Bloque { 
-  return crearNodo('dclFunc', { typ, id, params: params || [], bloque })
+FuncDcl = typ:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() }))  _ brackets:( _"[" _ "]" _ )* _  id:Identificador _ "(" _ params:Parametros? _ ")" _ bloque:Bloque { 
+  return crearNodo('dclFunc', { typ, id, brackets, params: params || [], bloque })
   //console.log({typ, id, params, bloque});
   }
 
@@ -78,7 +78,7 @@ ClassBody = dcl:VarDcl _ { return dcl }
 // id = 'param1'
 // params = ['param2, 'param3']
 // return ['param1', ...['param2', 'param3']]
-Parametros = _ firstParam:(tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } )  _ params:("," _ tipo:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() })) _ id:Identificador { return { tipo, id } } )* { 
+Parametros = _ firstParam:(tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() }))  _ brackets:( _"[" _ "]" _ )* _  id:Identificador { return { tipo, id, brackets } } )  _ params:("," _ tipo:("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() }))  _ brackets:( _"[" _ "]" _ )* _  id:Identificador { return { tipo, brackets, id } } )* { 
   return [firstParam, ...params] 
   }
 
