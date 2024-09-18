@@ -1,0 +1,109 @@
+programa = _ dcl:Declaracion* _
+
+Declaracion = StructDecl _
+            / ClassDcl _
+            / FuncDcl _
+            / VarDcl1 _
+            / VarDcl _
+            / Asignacion _ ";" _
+            / Stmt _
+            / Identificador _ "(" _ ( _ Expresion _ ( _ "," _ Expresion _ )* )? _ ")" _ ";" _
+            
+StructDecl = "struct" _ ([A-Z][A-Za-z0-9]*) _ "{" _ ( _ ("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*))  _ ( _"[" _ "]" _ )* _  Identificador _ ";" _ )+ _ "}" _ ";"
+
+VarDcl1 = ("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*)) _ ( _"[" _ "]" _ )* _ Identificador _ ("=" _ Expresion)? _ ";"
+
+VarDcl = "var" _ Identificador _ "=" _ Expresion _ ";"
+
+FuncDcl = ("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*))  _ ( _"[" _ "]" _ )* _  Identificador _ "(" _ Parametros? _ ")" _ Bloque
+
+ClassDcl = "class" _ Identificador _ "{" _ ClassBody* _ "}"
+
+ClassBody = VarDcl _
+          / FuncDcl _
+
+Parametros = _ (("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*))  _ ( _"[" _ "]" _ )* _  Identificador)  _ ("," _ ("void"/"string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*))  _ ( _"[" _ "]" _ )* _  Identificador)*
+
+Stmt = "System.out.println(" _ Expresion _ (_ "," _ Expresion _)* ")" _ ";"
+    / Bloque
+    / "if" _ "(" _ Expresion _ ")" _ Stmt 
+      (_ "else" _ Stmt)?
+    / "switch" _ "(" _ Expresion _ ")" _ "{" _ ("case" _ Expresion _ ":" _ Declaracion*)+ _ ("default" _ ":" _ Declaracion*)? _ "}"
+    / "while" _ "(" _ Expresion _ ")" _ Stmt
+    / "for" _ "(" _ (ForParamsEach / ForParamsNormal) _ ")" _ Stmt
+    / "break" _ ";"
+    / "continue" _ ";"
+    / "return" _ Expresion? _ ";"
+
+Bloque = "{" _ Declaracion* _ "}"
+
+ForParamsNormal = (VarDcl1 / VarDcl) _ Expresion _ ";" _ Asignacion
+
+ForParamsEach = ("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]*)) " " _ Identificador _ ":" _ Expresion
+
+Identificador = [a-zA-Z_][a-zA-Z0-9_]*
+
+Expresion = BinOr TernaryRest?
+
+Asignacion = Reference2 _ ("+="/"-="/"=") _ Expresion _
+
+TernaryRest = _ "?" _ Expresion _ ":" _ Expresion
+
+BinOr = BinAnd (_ ("||") _ BinAnd)*
+
+BinAnd = BinEqualNotEqual (_ ("&&") _ BinEqualNotEqual)*
+
+BinEqualNotEqual = BinInequity (_ ("==" / "!=") _ BinInequity)*
+
+BinInequity = Suma (_ ("<=" / ">=" / "<" / ">") _ Suma)*
+
+Suma = Multiplicacion (_ ("+" / "-") _ Multiplicacion)*
+
+Multiplicacion = Unaria (_ ("*" / "/" / "%") _ Unaria)*
+
+Unaria = ("-" / "!") _ Unaria
+/ Dato
+
+Argumentos = Expresion _ ("," _ Expresion)*
+
+Dato = [0-9]+"."[0-9]+
+  / [0-9]+
+  / "{" _ (Expresion _ ( _ "," _ Expresion)* ) _ "}"
+  / "(" _ Expresion _ ")"
+  / "new" _ ("string"/"boolean"/"char"/"int"/"float") _ ( _ "[" _ [0-9]+ _ "]" _ )+
+  / "typeof " _ Expresion
+  / string
+  / null
+  / boolean
+  / char
+  / Identificador _ "{" _ Identificador _ ":" _ Expresion _ ( _ "," _ Identificador _ ":" _ Expresion _ )* _ "}"
+  / Reference
+
+Reference = Identificador (PropertyAccess / ArrayAccess / FunctionCall)*
+
+Reference2 = Identificador (PropertyAccess / ArrayAccess)*
+
+PropertyAccess = "." Identificador
+
+ArrayAccess = "[" Expresion "]"
+
+FunctionCall = "(" ArgumentList? ")"
+
+ArgumentList = Expresion (_ "," _ Expresion _)*
+
+string = '"' doubleQuotedChars* '"'
+
+boolean = "true" / "false"
+
+null = "null"
+
+doubleQuotedChars = [^"\\] / "\\" .
+
+_ = ([ \t\n\r] / Comentarios)*
+
+char = "'" simpleChar "'"
+
+simpleChar = [^'\\] / "\\" .
+
+Comentarios = "//" (![\n] .)*
+            / "/*" (!("*/") .)* "*/"

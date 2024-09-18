@@ -1,6 +1,7 @@
 
 {
     const crearNodo = (tipoNodo, props) =>{
+      //console.log({tipoNodo, props})
     const tipos = {
       'agrupacion': nodos.Agrupacion,
       'binaria': nodos.OperacionBinaria,
@@ -56,7 +57,7 @@ Declaracion = dcl:StructDecl _ { return dcl }
             / stmt:Stmt _ { return stmt }
             / id:Identificador _ "(" _ args:( _ exp:Expresion _ restParams:( _ "," _ exp1:Expresion _ { return exp1 })* { let arr = restParams; arr.unshift(exp); return arr } )? _ ")" _ ";" _ { return crearNodo('llamada', { id, args: args || [] }); }
             
-StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() }))  _ brackets:( _"[" _ "]" _ )* _  iden:Identificador _ ";" _ { return { tipo, brakets, iden } })+ _ "}" _ ";" {
+StructDecl = "struct" _ id:([A-Z][A-Za-z0-9]* { return text() }) _ "{" _ attrs:( _ tipo:("string"/"boolean"/"char"/"int"/"float"/([A-Z][A-Za-z0-9]* { return text() }))  _ brackets:( _"[" _ "]" _ )* _  iden:Identificador _ ";" _ { return { tipo, iden } })+ _ "}" _ ";" {
   return crearNodo('structDecl', { id, attrs })
 }
 
@@ -115,7 +116,7 @@ ForInit = dcl:VarDcl { return dcl }
         / ";" { return null }
 */
 
-Identificador = [a-zA-Z][a-zA-Z0-9]* { return text() }
+Identificador = [a-zA-Z_][a-zA-Z0-9_]* { return text() }
 
 Expresion
   = left:BinOr rest:TernaryRest?

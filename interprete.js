@@ -256,7 +256,7 @@ export class InterpreterVisitor extends BaseVisitor {
                 break;
         }
 
-        this.entornoActual.set(nombreVariable, tipoSimbolo, tipoVariable, valorVariable);
+        this.entornoActual.set(nombreVariable, tipoSimbolo, tipoVariable, valorVariable, node.location.start.line, node.location.start.column);
     }
 
     /**
@@ -272,7 +272,7 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitStructDecl(node) {
         if (!this.entornoActual.exists(node.id)) {
-            this.entornoActual.set(node.id, "structDecl", "struct", node.attrs);
+            this.entornoActual.set(node.id, "structDecl", "struct", node.attrs, node.location.start.line, node.location.start.column);
         }
     }
 
@@ -386,12 +386,12 @@ export class InterpreterVisitor extends BaseVisitor {
             }
 
             if (tipoValor === tipoVariable) {
-                this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable);
+                this.entornoActual.set(nombreVariable, typeSymbol, tipoVariable, valorVariable, node.location.start.line, node.location.start.column);
             } else {
                 throw new Error("Tipos no coinciden");
             }
         } else {
-            this.entornoActual.set(nombreVariable, "simple", tipoVariable, null);
+            this.entornoActual.set(nombreVariable, "simple", tipoVariable, null, node.location.start.line, node.location.start.column);
         }
     }
 
@@ -400,6 +400,7 @@ export class InterpreterVisitor extends BaseVisitor {
       * @type {BaseVisitor['visitReferenciaVariable']}
       */
     visitReferenciaVariable(node) {
+        //console.log({node})
         // Hacer el de las funciones
         const { head, tail } = node.refData;
         let headData;
@@ -480,6 +481,8 @@ export class InterpreterVisitor extends BaseVisitor {
                         }
                     }
                 } else if (currVal.type === "FunctionCall") {
+                    currVal.arguments.forEach((elem) => elem.accept(this));
+
                     if ((head === "Object") && (currIdx === 1) && (prev.type === "PropertyAccess") && (prev.property === "keys")) {
                         if ((currVal.arguments.length === 1) && (getTipoSimboloByType(this.getTrueType(currVal.arguments[0]) === "struct"))) {
                             //const acceptedVal = currVal.arguments[0].accept(this);
@@ -1017,7 +1020,7 @@ export class InterpreterVisitor extends BaseVisitor {
     */
     visitFuncDcl(node) {
         const funcion = new FuncionForanea(node, this.entornoActual);
-        this.entornoActual.set(node.id, "function", node.typ, funcion);
+        this.entornoActual.set(node.id, "function", node.typ, funcion, node.location.start.line, node.location.start.column);
     }
 
 

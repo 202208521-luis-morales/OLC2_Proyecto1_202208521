@@ -232,8 +232,8 @@ function peg$parse(input, options) {
 
   var peg$r0 = /^[A-Z]/;
   var peg$r1 = /^[A-Za-z0-9]/;
-  var peg$r2 = /^[a-zA-Z]/;
-  var peg$r3 = /^[a-zA-Z0-9]/;
+  var peg$r2 = /^[a-zA-Z_]/;
+  var peg$r3 = /^[a-zA-Z0-9_]/;
   var peg$r4 = /^[<>]/;
   var peg$r5 = /^[+\-]/;
   var peg$r6 = /^[%*\/]/;
@@ -277,8 +277,8 @@ function peg$parse(input, options) {
   var peg$e30 = peg$literalExpectation("continue", false);
   var peg$e31 = peg$literalExpectation("return", false);
   var peg$e32 = peg$literalExpectation(" ", false);
-  var peg$e33 = peg$classExpectation([["a", "z"], ["A", "Z"]], false, false);
-  var peg$e34 = peg$classExpectation([["a", "z"], ["A", "Z"], ["0", "9"]], false, false);
+  var peg$e33 = peg$classExpectation([["a", "z"], ["A", "Z"], "_"], false, false);
+  var peg$e34 = peg$classExpectation([["a", "z"], ["A", "Z"], ["0", "9"], "_"], false, false);
   var peg$e35 = peg$literalExpectation("+=", false);
   var peg$e36 = peg$literalExpectation("-=", false);
   var peg$e37 = peg$literalExpectation("?", false);
@@ -324,7 +324,7 @@ function peg$parse(input, options) {
   var peg$f10 = function(id, args) { return crearNodo('llamada', { id, args: args || [] }); };
   var peg$f11 = function() { return text() };
   var peg$f12 = function(id) { return text() };
-  var peg$f13 = function(id, tipo, brackets, iden) { return { tipo, brakets, iden } };
+  var peg$f13 = function(id, tipo, brackets, iden) { return { tipo, iden } };
   var peg$f14 = function(id, attrs) {
   return crearNodo('structDecl', { id, attrs })
 };
@@ -5398,6 +5398,7 @@ function peg$parse(input, options) {
 
 
     const crearNodo = (tipoNodo, props) =>{
+      //console.log({tipoNodo, props})
     const tipos = {
       'agrupacion': nodos.Agrupacion,
       'binaria': nodos.OperacionBinaria,

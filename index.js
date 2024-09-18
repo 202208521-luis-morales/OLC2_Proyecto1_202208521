@@ -28,8 +28,6 @@ editor.onDidChangeModelContent(() => {
 btn.addEventListener('click', () => {
     const codigoFuente = editor.getValue()
     try {
-
-
         const sentencias = parse(codigoFuente)
         // ast.innerHTML = JSON.stringify(sentencias, null, 2)
 
