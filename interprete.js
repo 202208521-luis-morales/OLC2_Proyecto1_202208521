@@ -7,7 +7,6 @@ import { embebidas } from "./embebidas.js";
 import { FuncionForanea } from "./foreanea.js";
 import { Clase } from "./clase.js";
 import { Instancia } from "./instancia.js";
-import lodashCloneDeep from "./lodash/cloneDeep.js"
 
 export class InterpreterVisitor extends BaseVisitor {
     constructor() {
@@ -461,9 +460,9 @@ export class InterpreterVisitor extends BaseVisitor {
                             if (prev.prevVal.valor[acceptedIndex].tipoSimbolo === "vector") {
                                 return {
                                     type: currVal.type, property: prev.property, prevVal: {
-                                        tipoSimbolo: lodashCloneDeep(prev.prevVal.valor)[acceptedIndex].tipoSimbolo,
-                                        tipoVariable: lodashCloneDeep(prev.prevVal.valor)[acceptedIndex].tipoVariable,
-                                        valor: lodashCloneDeep(prev.prevVal.valor)[acceptedIndex].valor
+                                        tipoSimbolo: structuredClone(prev.prevVal.valor)[acceptedIndex].tipoSimbolo,
+                                        tipoVariable: structuredClone(prev.prevVal.valor)[acceptedIndex].tipoVariable,
+                                        valor: structuredClone(prev.prevVal.valor)[acceptedIndex].valor
                                     }
                                 }
                             } else {
@@ -660,7 +659,7 @@ export class InterpreterVisitor extends BaseVisitor {
             node.tipo = headData.tipoVariable;
 
             if ((headData.tipoSimbolo === "vector") || (headData.tipoSimbolo === "structData")) {
-                return lodashCloneDeep(headData.valor);
+                return structuredClone(headData.valor);
             } else {
                 return headData.valor;
             }
